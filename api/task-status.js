@@ -27,6 +27,7 @@ export default async function handler(req, res) {
     )
 
     const result = await response.json()
+    console.log('[task-status] 完整响应:', JSON.stringify(result))
 
     if (!response.ok) {
       return res.status(response.status).json({ error: '查询失败', detail: result })
@@ -38,24 +39,56 @@ export default async function handler(req, res) {
       progress: result.progress || null
     }
 
-    // 任务成功时，从 content 数组中提取模型文件 URL
+    // 任务成功时，灵活解析模型 URL
     if (result.status === 'succeeded' && result.content) {
-      const modelContent = result.content.find(
-        item => item.type === 'file' || item.type === 'model' || item.url
-      )
-      if (modelContent) {
-        taskStatus.modelUrl = modelContent.url || modelContent.file_url || ''
+      let modelUrl = null
+
+      if (result.content.model_urls && result.content.model_urls.length > 0) {
+        // 格式1: content.model_urls 数组
+        const glbFile = result.content.model_urls.find(
+          f => f.format === 'glb' || (f.url && f.url.endsWith('.glb'))
+        )
+        modelUrl = glbFile ? glbFile.url : result.content.model_urls[0].url
+      } else if (Array.isArray(result.content)) {
+        // 格式2: content 是数组
+        for (const item of result.content) {
+          if (item.url) { modelUrl = item.url; break }
+          if (item.file_url) { modelUrl = item.file_url; break }
+          if (item.model_url) { modelUrl = item.model_url; break }
+          // 嵌套的 model_urls
+          if (item.model_urls && item.model_urls.length > 0) {
+            modelUrl = item.model_urls[0].url || item.model_urls[0]; break
+          }
+        }
+      } else if (result.content.url) {
+        // 格式3: content.url 直接就是
+        modelUrl = result.content.url
+      } else if (typeof result.content === 'string') {
+        // 格式4: content 直接是 URL 字符串
+        modelUrl = result.content
       }
-      // 保留原始数据便于调试
-      taskStatus._rawContent = result.content
+
+      taskStatus.modelUrl = modelUrl
+      taskStatus._debug = result.content
+    }
+
+    // 也检查顶层的 output 字段（某些 API 版本用 output 而非 content）
+    if (result.status === 'succeeded' && !taskStatus.modelUrl && result.output) {
+      if (result.output.model_urls && result.output.model_urls.length > 0) {
+        taskStatus.modelUrl = result.output.model_urls[0].url || result.output.model_urls[0]
+      } else if (result.output.url) {
+        taskStatus.modelUrl = result.output.url
+      }
+      taskStatus._debug = result.output
     }
 
     if (result.status === 'failed') {
-      taskStatus.error = result.error || '生成失败'
+      taskStatus.error = result.error || result.message || '生成失败'
     }
 
     return res.status(200).json(taskStatus)
   } catch (err) {
+    console.error('[task-status] 错误:', err)
     return res.status(500).json({ error: err.message })
   }
 }
