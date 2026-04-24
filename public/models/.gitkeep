@@ -1,0 +1,2 @@
+把 .glb 模型文件放在这个目录下，Vercel 会自动托管为静态文件。
+访问地址：https://你的域名.vercel.app/models/文件名.glb
