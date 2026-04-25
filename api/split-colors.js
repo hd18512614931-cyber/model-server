@@ -26,16 +26,7 @@ module.exports = async (req, res) => {
     const { width, height } = metadata;
     const rawPixels = await image.ensureAlpha().raw().toBuffer();
 
-    // 预处理：去除白色/米白色背景（亮度>230的像素设为透明）
-    for (let i = 0; i < width * height; i++) {
-      const offset = i * 4;
-      const r = rawPixels[offset], g = rawPixels[offset + 1], b = rawPixels[offset + 2];
-      const brightness = (r + g + b) / 3;
-      const saturation = (Math.max(r, g, b) - Math.min(r, g, b)) / 255;
-      if (brightness > 220 && saturation < 0.15) {
-        rawPixels[offset + 3] = 0;
-      }
-    }
+    removeConnectedBackground(rawPixels, width, height);
 
     const layers = [
       {
@@ -133,4 +124,47 @@ function rgbToHsl(r, g, b) {
     }
   }
   return [h, s, l];
+}
+
+function removeConnectedBackground(rawPixels, width, height) {
+  const pixelCount = width * height;
+  const visited = new Uint8Array(pixelCount);
+  const queue = new Uint32Array(pixelCount);
+  let head = 0;
+  let tail = 0;
+
+  const enqueue = (x, y) => {
+    if (x < 0 || x >= width || y < 0 || y >= height) return;
+    const index = y * width + x;
+    if (visited[index] || !isBackgroundPixel(rawPixels, index)) return;
+    visited[index] = 1;
+    queue[tail++] = index;
+  };
+
+  enqueue(0, 0);
+  enqueue(width - 1, 0);
+  enqueue(0, height - 1);
+  enqueue(width - 1, height - 1);
+
+  while (head < tail) {
+    const index = queue[head++];
+    rawPixels[index * 4 + 3] = 0;
+
+    const x = index % width;
+    const y = Math.floor(index / width);
+    enqueue(x + 1, y);
+    enqueue(x - 1, y);
+    enqueue(x, y + 1);
+    enqueue(x, y - 1);
+  }
+}
+
+function isBackgroundPixel(rawPixels, index) {
+  const offset = index * 4;
+  const r = rawPixels[offset], g = rawPixels[offset + 1], b = rawPixels[offset + 2], a = rawPixels[offset + 3];
+  if (a <= 10) return true;
+
+  const brightness = (r + g + b) / 3;
+  const saturation = (Math.max(r, g, b) - Math.min(r, g, b)) / 255;
+  return brightness > 200 && saturation < 0.2;
 }
