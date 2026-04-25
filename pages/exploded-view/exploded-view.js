@@ -2,7 +2,10 @@ const API_URL = 'https://model-server-rosy.vercel.app/api/split-colors';
 const CACHE_LIST_KEY = 'colorLayersList';
 const LEGACY_CACHE_KEY = 'colorLayers_demo';
 const MAX_RECORDS = 10;
-const DEMO_IMAGE_PATHS = ['/images/nianhua-demo.jpg', 'images/nianhua-demo.jpg'];
+const GALLERY_IMAGES = [
+  { localImagePath: '/images/nianhua-demo.jpg', id: 'demo', title: '佛山木版年画（示例）' },
+  { localImagePath: '/images/longtou.jpg', id: 'longtou', title: '龙头年画' }
+];
 const EXPLODED_TRANSFORMS = [
   'translateZ(200px) translateY(-80px)',
   'translateZ(100px) translateY(-40px)',
@@ -15,6 +18,7 @@ Page({
   data: {
     loading: true,
     loadingText: '正在分析色层...',
+    loadingProgress: '',
     isExploded: false,
     scale: 1,
     rotateX: 55,
@@ -37,11 +41,12 @@ Page({
         currentIndex: 0
       }, () => {
         this.applyCurrentLayers();
+        this._ensureGalleryImages();
       });
       return;
     }
 
-    this._loadSplitLayers();
+    this._initializeGallery();
   },
 
   goBack() {
@@ -154,42 +159,105 @@ Page({
     this._initialScale = this.data.scale;
   },
 
-  async _loadSplitLayers() {
-    try {
-      this.setData({ loading: true, loadingText: '正在分析色层...' });
-      const imageBase64 = await this._readDemoImageBase64();
-      const response = await this._requestSplitColors(imageBase64);
-      const layerFiles = await Promise.all((response.layers || []).slice(0, 5).map((layer, index) => {
-        return this._writeLayerToFile(layer, index);
-      }));
+  async addImageToGallery(localImagePath, id, title) {
+    const currentList = wx.getStorageSync(CACHE_LIST_KEY) || [];
+    if (Array.isArray(currentList) && currentList.find((item) => item.id === id && this._areLayerFilesValid(item.layers))) {
+      return false;
+    }
 
-      const record = {
-        id: 'demo',
-        title: '佛山木版年画（示例）',
-        layers: layerFiles,
-        timestamp: Date.now()
-      };
-      const colorLayersList = this._saveColorLayersList([record]);
+    const fs = wx.getFileSystemManager();
+    const base64 = wx.arrayBufferToBase64(fs.readFileSync(localImagePath));
+    const dataUrl = 'data:image/jpeg;base64,' + base64;
+    const response = await this._requestSplitColors(dataUrl);
+    if (!response.layers || response.layers.length === 0) return false;
 
-      this.setData({
-        loading: false,
-        colorLayersList,
-        currentIndex: 0,
-        isExploded: false,
-        scale: 1,
-        rotateX: 55,
-        rotateZ: -30
-      }, () => {
-        this.applyCurrentLayers();
+    const layers = [];
+    for (let i = 0; i < response.layers.length; i++) {
+      const layer = response.layers[i];
+      const filePath = `${wx.env.USER_DATA_PATH}/layer_${id}_${i}.png`;
+      const data = layer.data || layer.base64 || '';
+      const base64Data = data.replace(/^data:image\/\w+;base64,/, '');
+      if (!base64Data) continue;
+
+      fs.writeFileSync(filePath, wx.base64ToArrayBuffer(base64Data), 'binary');
+      layers.push({
+        tempPath: filePath,
+        color: layer.color || '',
+        label: layer.label || ('图层' + (i + 1))
       });
+    }
+    if (layers.length === 0) return false;
+
+    const nextList = (Array.isArray(wx.getStorageSync(CACHE_LIST_KEY)) ? wx.getStorageSync(CACHE_LIST_KEY) : [])
+      .filter((item) => item.id !== id);
+    nextList.push({
+      id,
+      title,
+      layers,
+      timestamp: Date.now()
+    });
+    wx.setStorageSync(CACHE_LIST_KEY, nextList.slice(0, MAX_RECORDS));
+    return true;
+  },
+
+  async _initializeGallery() {
+    try {
+      this.setData({ loading: true, loadingProgress: '1 / 2' });
+      await this.addImageToGallery(GALLERY_IMAGES[0].localImagePath, GALLERY_IMAGES[0].id, GALLERY_IMAGES[0].title);
+      this._refreshGalleryFromStorage(0);
+
+      this.setData({ loading: true, loadingProgress: '2 / 2' });
+      await this.addImageToGallery(GALLERY_IMAGES[1].localImagePath, GALLERY_IMAGES[1].id, GALLERY_IMAGES[1].title);
+      this._refreshGalleryFromStorage(this.data.currentIndex);
+      this.setData({ loading: false, loadingProgress: '' });
     } catch (err) {
       console.error('[五色分层] 加载失败:', err);
-      this.setData({ loading: false, layers: [] });
+      this.setData({ loading: false, loadingProgress: '' });
       wx.showToast({
         title: err.message || '分色加载失败',
         icon: 'none'
       });
     }
+  },
+
+  async _ensureGalleryImages() {
+    try {
+      for (let i = 0; i < GALLERY_IMAGES.length; i++) {
+        const image = GALLERY_IMAGES[i];
+        const list = wx.getStorageSync(CACHE_LIST_KEY) || [];
+        const exists = Array.isArray(list) && list.find((item) => item.id === image.id && this._areLayerFilesValid(item.layers));
+        if (exists) continue;
+
+        this.setData({ loading: true, loadingProgress: `${i + 1} / ${GALLERY_IMAGES.length}` });
+        await this.addImageToGallery(image.localImagePath, image.id, image.title);
+        this._refreshGalleryFromStorage(this.data.currentIndex);
+      }
+    } catch (err) {
+      console.error('[五色分层] 追加图库失败:', err);
+      wx.showToast({
+        title: err.message || '图库更新失败',
+        icon: 'none'
+      });
+    } finally {
+      this.setData({ loading: false, loadingProgress: '' });
+    }
+  },
+
+  _refreshGalleryFromStorage(preferredIndex) {
+    const updatedList = this._getValidColorLayersList();
+    if (updatedList.length === 0) return;
+
+    const currentIndex = Math.min(preferredIndex || 0, updatedList.length - 1);
+    this.setData({
+      colorLayersList: updatedList,
+      currentIndex,
+      isExploded: false,
+      scale: 1,
+      rotateX: 55,
+      rotateZ: -30
+    }, () => {
+      this.applyCurrentLayers();
+    });
   },
 
   _getValidColorLayersList() {
@@ -233,22 +301,9 @@ Page({
     return [record];
   },
 
-  _saveColorLayersList(records) {
-    const list = records.slice(0, MAX_RECORDS).map((record) => ({
-      id: record.id,
-      title: record.title,
-      layers: record.layers.map((layer) => ({
-        tempPath: layer.tempPath,
-        color: layer.color,
-        label: layer.label
-      })),
-      timestamp: record.timestamp
-    }));
-    wx.setStorageSync(CACHE_LIST_KEY, list);
-    return list;
-  },
-
   _areLayerFilesValid(layers) {
+    if (!Array.isArray(layers) || layers.length === 0) return false;
+
     const fs = wx.getFileSystemManager();
     try {
       layers.forEach((layer) => {
@@ -286,32 +341,6 @@ Page({
     }, 200);
   },
 
-  _readDemoImageBase64() {
-    return new Promise((resolve, reject) => {
-      const fs = wx.getFileSystemManager();
-      const tryRead = (index) => {
-        const filePath = DEMO_IMAGE_PATHS[index];
-        if (!filePath) {
-          reject(new Error('年画图片读取失败'));
-          return;
-        }
-
-        fs.readFile({
-          filePath,
-          encoding: 'base64',
-          success: (res) => {
-            resolve('data:image/jpeg;base64,' + res.data);
-          },
-          fail: () => {
-            tryRead(index + 1);
-          }
-        });
-      };
-
-      tryRead(0);
-    });
-  },
-
   _requestSplitColors(imageBase64) {
     return new Promise((resolve, reject) => {
       wx.request({
@@ -334,35 +363,6 @@ Page({
         },
         fail: (err) => {
           reject(new Error(err.errMsg || '分色接口请求失败'));
-        }
-      });
-    });
-  },
-
-  _writeLayerToFile(layer, index) {
-    return new Promise((resolve, reject) => {
-      const dataUrl = layer.data || '';
-      const base64Data = dataUrl.split(',')[1];
-      if (!base64Data) {
-        reject(new Error('图层数据格式错误'));
-        return;
-      }
-
-      const fileName = `nianhua-color-layer-demo-${index}-${layer.name || 'layer'}.png`;
-      const tempPath = `${wx.env.USER_DATA_PATH}/${fileName}`;
-      wx.getFileSystemManager().writeFile({
-        filePath: tempPath,
-        data: base64Data,
-        encoding: 'base64',
-        success: () => {
-          resolve({
-            tempPath,
-            color: layer.color,
-            label: layer.label
-          });
-        },
-        fail: (err) => {
-          reject(new Error(err.errMsg || '图层文件写入失败'));
         }
       });
     });

@@ -9,12 +9,12 @@
 
   <view class="loading-panel" wx:if="{{loading}}">
     <view class="loading-ring"></view>
-    <text class="loading-text">正在分析色层...</text>
+    <text class="loading-text">正在分析色层...（{{loadingProgress}}）</text>
   </view>
 
   <view
     class="stage-wrapper {{slideDirection}}"
-    wx:if="{{!loading}}"
+    wx:if="{{layers.length > 0}}"
     bindtouchstart="onTouchStart"
     bindtouchmove="onTouchMove"
     bindtouchend="onTouchEnd"
