@@ -20,12 +20,42 @@
       <text class="title">佛山木版年画</text>
       <text class="subtitle">非遗传承 · AI焕新</text>
     </view>
+
+    <view class="preview-card" bindtap="goToExplodedView">
+      <view class="preview-stage">
+        <view class="preview-layers-container">
+          <image class="preview-layer"
+                 src="/images/layers/nianhua-demo/layer_4.png"
+                 mode="aspectFit"
+                 style="transform: translateZ(-16px) translateY(8px);" />
+          <image class="preview-layer"
+                 src="/images/layers/nianhua-demo/layer_3.png"
+                 mode="aspectFit"
+                 style="transform: translateZ(-8px) translateY(4px);" />
+          <image class="preview-layer"
+                 src="/images/layers/nianhua-demo/layer_2.png"
+                 mode="aspectFit"
+                 style="transform: translateZ(0px);" />
+          <image class="preview-layer"
+                 src="/images/layers/nianhua-demo/layer_1.png"
+                 mode="aspectFit"
+                 style="transform: translateZ(8px) translateY(-4px);" />
+          <image class="preview-layer"
+                 src="/images/layers/nianhua-demo/layer_0.png"
+                 mode="aspectFit"
+                 style="transform: translateZ(16px) translateY(-8px);" />
+        </view>
+      </view>
+      <view class="preview-info">
+        <text class="preview-title">五色套印 · 分层工艺</text>
+        <text class="preview-hint">点击查看交互演示 →</text>
+      </view>
+    </view>
     
     <button class="btn-create" bindtap="goToCreate">开始 AI 创作</button>
     
     <view class="menu-row">
       <view class="menu-btn" bindtap="goTo3D"><text>3D 展厅</text></view>
-      <view class="menu-btn" bindtap="goToExplodedView"><text> 五色套印分层演示</text></view>
       <view class="menu-btn" bindtap="showToast" data-msg="文创商城开发中"><text>文创商城</text></view>
     </view>
   </view>

@@ -103,6 +103,61 @@ page {
   letter-spacing: 4rpx;
 }
 
+.preview-card {
+  width: 90%;
+  margin: 30rpx auto;
+  border-radius: 24rpx;
+  overflow: hidden;
+  background: rgba(255, 241, 207, 0.06);
+  border: 1rpx solid rgba(248, 229, 169, 0.15);
+}
+
+.preview-stage {
+  width: 100%;
+  height: 480rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  perspective: 800px;
+  overflow: hidden;
+}
+
+.preview-layers-container {
+  position: relative;
+  width: 360rpx;
+  height: 360rpx;
+  transform-style: preserve-3d;
+  transform: rotateX(45deg) rotateZ(-25deg) scale(0.85);
+}
+
+.preview-layer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0.9;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+}
+
+.preview-info {
+  padding: 24rpx 32rpx;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.preview-title {
+  color: #fff1cf;
+  font-size: 28rpx;
+  font-weight: 600;
+}
+
+.preview-hint {
+  color: rgba(248, 229, 169, 0.5);
+  font-size: 22rpx;
+}
+
 .btn-create {
   background: linear-gradient(135deg, #D9281C 0%, #aa1a10 100%);
   color: #FFFFFF;
