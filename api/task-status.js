@@ -42,42 +42,54 @@ export default async function handler(req, res) {
     // 任务成功时，灵活解析模型 URL
     if (result.status === 'succeeded' && result.content) {
       let modelUrl = null
+      let fileUrl = null
+
+      // Seed3D 2.0: content.file_url 返回 ZIP 压缩包
+      if (result.content.file_url) {
+        fileUrl = result.content.file_url
+      }
 
       if (result.content.model_urls && result.content.model_urls.length > 0) {
-        // 格式1: content.model_urls 数组
         const glbFile = result.content.model_urls.find(
           f => f.format === 'glb' || (f.url && f.url.endsWith('.glb'))
         )
         modelUrl = glbFile ? glbFile.url : result.content.model_urls[0].url
       } else if (Array.isArray(result.content)) {
-        // 格式2: content 是数组
         for (const item of result.content) {
           if (item.url) { modelUrl = item.url; break }
-          if (item.file_url) { modelUrl = item.file_url; break }
+          if (item.file_url) { fileUrl = fileUrl || item.file_url; break }
           if (item.model_url) { modelUrl = item.model_url; break }
-          // 嵌套的 model_urls
           if (item.model_urls && item.model_urls.length > 0) {
             modelUrl = item.model_urls[0].url || item.model_urls[0]; break
           }
         }
       } else if (result.content.url) {
-        // 格式3: content.url 直接就是
         modelUrl = result.content.url
       } else if (typeof result.content === 'string') {
-        // 格式4: content 直接是 URL 字符串
         modelUrl = result.content
       }
 
-      taskStatus.modelUrl = modelUrl
+      if (modelUrl) {
+        taskStatus.modelUrl = modelUrl
+      }
+      if (fileUrl) {
+        taskStatus.fileUrl = fileUrl
+        const urlPath = fileUrl.split('?')[0]
+        taskStatus.fileFormat = urlPath.endsWith('.zip') ? 'zip' : 'glb'
+      }
       taskStatus._debug = result.content
     }
 
     // 也检查顶层的 output 字段（某些 API 版本用 output 而非 content）
-    if (result.status === 'succeeded' && !taskStatus.modelUrl && result.output) {
+    if (result.status === 'succeeded' && !taskStatus.modelUrl && !taskStatus.fileUrl && result.output) {
       if (result.output.model_urls && result.output.model_urls.length > 0) {
         taskStatus.modelUrl = result.output.model_urls[0].url || result.output.model_urls[0]
       } else if (result.output.url) {
         taskStatus.modelUrl = result.output.url
+      } else if (result.output.file_url) {
+        taskStatus.fileUrl = result.output.file_url
+        const urlPath = result.output.file_url.split('?')[0]
+        taskStatus.fileFormat = urlPath.endsWith('.zip') ? 'zip' : 'glb'
       }
       taskStatus._debug = result.output
     }
