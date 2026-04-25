@@ -3,6 +3,7 @@
     "pages/index/index",
     "pages/create/create",
     "pages/layers/layers",
+    "pages/exploded-view/exploded-view",
     "pages/model3d/model3d",
     "pages/model3d-viewer/model3d-viewer",
     "pages/ai-3d/ai-3d",

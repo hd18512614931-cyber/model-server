@@ -1,0 +1,44 @@
+<view class="exploded-page">
+  <view class="back-btn" bindtap="goBack">
+    <text class="back-icon">←</text>
+  </view>
+
+  <view class="page-header">
+    <text class="page-title">佛山木版年画 · 五色套印工艺</text>
+  </view>
+
+  <view class="loading-panel" wx:if="{{loading}}">
+    <view class="loading-ring"></view>
+    <text class="loading-text">{{loadingText}}</text>
+  </view>
+
+  <view class="viewer-panel" wx:else>
+    <view class="stage">
+      <view class="layers-container">
+        <block wx:for="{{layers}}" wx:key="name">
+          <image
+            class="layer"
+            src="{{item.src}}"
+            mode="aspectFit"
+            style="{{item.style}}"
+          ></image>
+        </block>
+      </view>
+    </view>
+
+    <view class="legend-row">
+      <block wx:for="{{layers}}" wx:key="name">
+        <view class="legend-item">
+          <view class="legend-swatch" style="background: {{item.color}};"></view>
+          <text>{{item.label}}</text>
+        </view>
+      </block>
+    </view>
+  </view>
+
+  <view class="bottom-bar">
+    <button class="explode-btn" bindtap="toggleExplode" disabled="{{loading || !layers.length}}">
+      {{isExploded ? '合并还原年画' : '分解五色套印'}}
+    </button>
+  </view>
+</view>

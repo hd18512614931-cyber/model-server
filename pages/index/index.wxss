@@ -119,14 +119,18 @@ page {
 .menu-row {
   display: flex;
   justify-content: space-around;
+  flex-wrap: wrap;
+  gap: 18rpx;
   width: 100%;
 }
 
 .menu-btn {
   color: rgba(248, 229, 169, 0.8);
-  font-size: 24rpx;
-  padding: 12rpx 28rpx;
+  font-size: 22rpx;
+  padding: 12rpx 22rpx;
   border: 1rpx solid rgba(248, 229, 169, 0.3);
   border-radius: 40rpx;
   background: rgba(248, 229, 169, 0.05);
+  max-width: 92vw;
+  box-sizing: border-box;
 }

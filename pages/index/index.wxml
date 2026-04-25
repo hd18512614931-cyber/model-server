@@ -25,7 +25,7 @@
     
     <view class="menu-row">
       <view class="menu-btn" bindtap="goTo3D"><text>3D 展厅</text></view>
-      <view class="menu-btn" bindtap="showToast" data-msg="分色教学开发中"><text>分色教学</text></view>
+      <view class="menu-btn" bindtap="goToExplodedView"><text> 五色套印分层演示</text></view>
       <view class="menu-btn" bindtap="showToast" data-msg="文创商城开发中"><text>文创商城</text></view>
     </view>
   </view>

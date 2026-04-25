@@ -48,5 +48,11 @@ Page({
     wx.navigateTo({
       url: '/pages/gallery/gallery'
     });
+  },
+
+  goToExplodedView() {
+    wx.navigateTo({
+      url: '/pages/exploded-view/exploded-view'
+    });
   }
 })
