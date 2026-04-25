@@ -1,5 +1,5 @@
-import { createScopedThreejs } from 'threejs-miniprogram'
-import { registerGLTFLoader } from 'threejs-miniprogram/loaders/gltf-loader'
+const { createScopedThreejs } = require('threejs-miniprogram')
+const { registerGLTFLoader } = require('../../utils/gltf-loader')
 
 Page({
   data: {
@@ -141,6 +141,7 @@ Page({
   _parseGLB(arrayBuffer) {
     const THREE = this._THREE;
     const loader = new THREE.GLTFLoader();
+    loader.setCanvas(this._canvas);
 
     loader.parse(arrayBuffer, '', (gltf) => {
       const model = gltf.scene;
