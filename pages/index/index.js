@@ -46,7 +46,7 @@ Page({
 
   goTo3D() {
     wx.navigateTo({
-      url: '/pages/model3d/model3d'
+      url: '/pages/gallery/gallery'
     });
   }
 })

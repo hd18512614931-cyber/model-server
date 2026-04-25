@@ -29,7 +29,7 @@ Page({
     const name = app.globalData._pendingModelName || options.name || '3D模型';
     this.setData({ name: decodeURIComponent(name), modelName: decodeURIComponent(name) });
 
-    this._modelUrl = app.globalData._pendingModelUrl || '';
+    this._modelUrl = app.globalData._pendingModelUrl || (options.url ? decodeURIComponent(options.url) : '');
 
     app.globalData._pendingModelUrl = '';
     app.globalData._pendingModelName = '';
