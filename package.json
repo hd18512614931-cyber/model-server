@@ -11,6 +11,6 @@
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
-    "threejs-miniprogram": "^0.0.8"
+    "three-platformize": "^1.133.3"
   }
 }
