@@ -13,7 +13,7 @@
   </view>
 
   <view class="viewer-panel" wx:else>
-    <view class="stage">
+    <view class="stage" bindtap="toggleExplode">
       <view class="layers-container">
         <block wx:for="{{layers}}" wx:key="name">
           <image
@@ -34,11 +34,5 @@
         </view>
       </block>
     </view>
-  </view>
-
-  <view class="bottom-bar">
-    <button class="explode-btn" bindtap="toggleExplode" disabled="{{loading || !layers.length}}">
-      {{isExploded ? '合并还原年画' : '分解五色套印'}}
-    </button>
   </view>
 </view>
