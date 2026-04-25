@@ -1,10 +1,31 @@
 const API_URL = 'https://model-server-rosy.vercel.app/api/split-colors';
-const CACHE_LIST_KEY = 'colorLayersList';
-const LEGACY_CACHE_KEY = 'colorLayers_demo';
-const MAX_RECORDS = 10;
-const GALLERY_IMAGES = [
-  { localImagePath: '/images/nianhua-demo.jpg', id: 'demo', title: '佛山木版年画（示例）' },
-  { localImagePath: '/images/longtou.jpg', id: 'longtou', title: '龙头年画' }
+const USER_CACHE_KEY = 'userColorLayers';
+const MAX_USER_RECORDS = 10;
+const PRESET_GALLERIES = [
+  {
+    id: 'nianhua-demo',
+    title: '佛山木版年画示例',
+    isPreset: true,
+    layers: [
+      { localPath: '/images/layers/nianhua-demo/layer_0.png', color: '#1a1a1a', label: '墨线稿' },
+      { localPath: '/images/layers/nianhua-demo/layer_1.png', color: '#cc2936', label: '大红' },
+      { localPath: '/images/layers/nianhua-demo/layer_2.png', color: '#2d6a4f', label: '翠绿' },
+      { localPath: '/images/layers/nianhua-demo/layer_3.png', color: '#e6a817', label: '橙黄' },
+      { localPath: '/images/layers/nianhua-demo/layer_4.png', color: '#e8b4a2', label: '肉粉' }
+    ]
+  },
+  {
+    id: 'longtou',
+    title: '龙头年画',
+    isPreset: true,
+    layers: [
+      { localPath: '/images/layers/longtou/layer_0.png', color: '#1a1a1a', label: '墨线稿' },
+      { localPath: '/images/layers/longtou/layer_1.png', color: '#cc2936', label: '大红' },
+      { localPath: '/images/layers/longtou/layer_2.png', color: '#2d6a4f', label: '翠绿' },
+      { localPath: '/images/layers/longtou/layer_3.png', color: '#e6a817', label: '橙黄' },
+      { localPath: '/images/layers/longtou/layer_4.png', color: '#e8b4a2', label: '肉粉' }
+    ]
+  }
 ];
 const EXPLODED_TRANSFORMS = [
   'translateZ(200px) translateY(-80px)',
@@ -16,7 +37,7 @@ const EXPLODED_TRANSFORMS = [
 
 Page({
   data: {
-    loading: true,
+    loading: false,
     loadingText: '正在分析色层...',
     loadingProgress: '',
     isExploded: false,
@@ -33,20 +54,18 @@ Page({
     this._resetTouchState();
     this._isSwitching = false;
 
-    const cachedList = this._getValidColorLayersList();
-    if (cachedList.length > 0) {
-      this.setData({
-        loading: false,
-        colorLayersList: cachedList,
-        currentIndex: 0
-      }, () => {
-        this.applyCurrentLayers();
-        this._ensureGalleryImages();
-      });
-      return;
-    }
+    const colorLayersList = [
+      ...this._getPresetGalleries(),
+      ...this._getValidUserGalleries()
+    ];
 
-    this._initializeGallery();
+    this.setData({
+      colorLayersList,
+      currentIndex: 0,
+      loading: false
+    }, () => {
+      this.applyCurrentLayers();
+    });
   },
 
   goBack() {
@@ -76,15 +95,7 @@ Page({
     const current = this.data.colorLayersList[this.data.currentIndex];
     if (!current || !Array.isArray(current.layers)) return;
 
-    const fs = wx.getFileSystemManager();
-    const validLayers = current.layers.filter((layer) => {
-      try {
-        fs.accessSync(layer.tempPath);
-        return true;
-      } catch (err) {
-        return false;
-      }
-    });
+    const validLayers = current.isPreset ? current.layers : this._getExistingUserLayers(current.layers);
     if (validLayers.length === 0) return;
 
     this.setData({ layers: validLayers }, () => {
@@ -160,7 +171,7 @@ Page({
   },
 
   async addImageToGallery(localImagePath, id, title) {
-    const currentList = wx.getStorageSync(CACHE_LIST_KEY) || [];
+    const currentList = wx.getStorageSync(USER_CACHE_KEY) || [];
     if (Array.isArray(currentList) && currentList.find((item) => item.id === id && this._areLayerFilesValid(item.layers))) {
       return false;
     }
@@ -174,7 +185,7 @@ Page({
     const layers = [];
     for (let i = 0; i < response.layers.length; i++) {
       const layer = response.layers[i];
-      const filePath = `${wx.env.USER_DATA_PATH}/layer_${id}_${i}.png`;
+      const filePath = `${wx.env.USER_DATA_PATH}/user_layer_${id}_${i}.png`;
       const data = layer.data || layer.base64 || '';
       const base64Data = data.replace(/^data:image\/\w+;base64,/, '');
       if (!base64Data) continue;
@@ -188,117 +199,69 @@ Page({
     }
     if (layers.length === 0) return false;
 
-    const nextList = (Array.isArray(wx.getStorageSync(CACHE_LIST_KEY)) ? wx.getStorageSync(CACHE_LIST_KEY) : [])
+    const nextList = (Array.isArray(wx.getStorageSync(USER_CACHE_KEY)) ? wx.getStorageSync(USER_CACHE_KEY) : [])
       .filter((item) => item.id !== id);
-    nextList.push({
+    nextList.unshift({
       id,
       title,
+      isPreset: false,
       layers,
       timestamp: Date.now()
     });
-    wx.setStorageSync(CACHE_LIST_KEY, nextList.slice(0, MAX_RECORDS));
+    wx.setStorageSync(USER_CACHE_KEY, nextList.slice(0, MAX_USER_RECORDS));
     return true;
   },
 
-  async _initializeGallery() {
-    try {
-      this.setData({ loading: true, loadingProgress: '1 / 2' });
-      await this.addImageToGallery(GALLERY_IMAGES[0].localImagePath, GALLERY_IMAGES[0].id, GALLERY_IMAGES[0].title);
-      this._refreshGalleryFromStorage(0);
-
-      this.setData({ loading: true, loadingProgress: '2 / 2' });
-      await this.addImageToGallery(GALLERY_IMAGES[1].localImagePath, GALLERY_IMAGES[1].id, GALLERY_IMAGES[1].title);
-      this._refreshGalleryFromStorage(this.data.currentIndex);
-      this.setData({ loading: false, loadingProgress: '' });
-    } catch (err) {
-      console.error('[五色分层] 加载失败:', err);
-      this.setData({ loading: false, loadingProgress: '' });
-      wx.showToast({
-        title: err.message || '分色加载失败',
-        icon: 'none'
-      });
-    }
+  _getPresetGalleries() {
+    return PRESET_GALLERIES.map((gallery) => ({
+      id: gallery.id,
+      title: gallery.title,
+      isPreset: true,
+      layers: gallery.layers.map((layer) => ({
+        tempPath: layer.localPath,
+        color: layer.color,
+        label: layer.label
+      }))
+    }));
   },
 
-  async _ensureGalleryImages() {
-    try {
-      for (let i = 0; i < GALLERY_IMAGES.length; i++) {
-        const image = GALLERY_IMAGES[i];
-        const list = wx.getStorageSync(CACHE_LIST_KEY) || [];
-        const exists = Array.isArray(list) && list.find((item) => item.id === image.id && this._areLayerFilesValid(item.layers));
-        if (exists) continue;
+  _getValidUserGalleries() {
+    const storedList = wx.getStorageSync(USER_CACHE_KEY);
+    if (!Array.isArray(storedList) || storedList.length === 0) return [];
 
-        this.setData({ loading: true, loadingProgress: `${i + 1} / ${GALLERY_IMAGES.length}` });
-        await this.addImageToGallery(image.localImagePath, image.id, image.title);
-        this._refreshGalleryFromStorage(this.data.currentIndex);
-      }
-    } catch (err) {
-      console.error('[五色分层] 追加图库失败:', err);
-      wx.showToast({
-        title: err.message || '图库更新失败',
-        icon: 'none'
-      });
-    } finally {
-      this.setData({ loading: false, loadingProgress: '' });
-    }
-  },
-
-  _refreshGalleryFromStorage(preferredIndex) {
-    const updatedList = this._getValidColorLayersList();
-    if (updatedList.length === 0) return;
-
-    const currentIndex = Math.min(preferredIndex || 0, updatedList.length - 1);
-    this.setData({
-      colorLayersList: updatedList,
-      currentIndex,
-      isExploded: false,
-      scale: 1,
-      rotateX: 55,
-      rotateZ: -30
-    }, () => {
-      this.applyCurrentLayers();
-    });
-  },
-
-  _getValidColorLayersList() {
-    const migratedList = this._getMigratedLegacyList();
-    const storedList = wx.getStorageSync(CACHE_LIST_KEY);
-    const sourceList = Array.isArray(storedList) && storedList.length > 0 ? storedList : migratedList;
-    if (!Array.isArray(sourceList) || sourceList.length === 0) return [];
-
-    const validList = sourceList.filter((record) => {
+    const validList = storedList.filter((record) => {
       return record && Array.isArray(record.layers) && record.layers.length > 0 && this._areLayerFilesValid(record.layers);
-    }).slice(0, MAX_RECORDS);
+    }).slice(0, MAX_USER_RECORDS).map((record) => ({
+      id: record.id,
+      title: record.title,
+      isPreset: false,
+      layers: record.layers.map((layer) => ({
+        tempPath: layer.tempPath,
+        color: layer.color,
+        label: layer.label
+      })),
+      timestamp: record.timestamp
+    }));
 
     if (validList.length > 0) {
-      wx.setStorageSync(CACHE_LIST_KEY, validList);
+      wx.setStorageSync(USER_CACHE_KEY, validList);
     } else {
-      wx.removeStorageSync(CACHE_LIST_KEY);
+      wx.removeStorageSync(USER_CACHE_KEY);
     }
 
     return validList;
   },
 
-  _getMigratedLegacyList() {
-    const legacy = wx.getStorageSync(LEGACY_CACHE_KEY);
-    if (!legacy || !Array.isArray(legacy.layers) || legacy.layers.length === 0) return [];
-    if (!this._areLayerFilesValid(legacy.layers)) {
-      wx.removeStorageSync(LEGACY_CACHE_KEY);
-      return [];
-    }
-
-    const record = {
-      id: 'demo',
-      title: '佛山木版年画（示例）',
-      layers: legacy.layers.map((layer) => ({
-        tempPath: layer.tempPath,
-        color: layer.color,
-        label: layer.label
-      })),
-      timestamp: legacy.timestamp || Date.now()
-    };
-    wx.removeStorageSync(LEGACY_CACHE_KEY);
-    return [record];
+  _getExistingUserLayers(layers) {
+    const fs = wx.getFileSystemManager();
+    return layers.filter((layer) => {
+      try {
+        fs.accessSync(layer.tempPath);
+        return true;
+      } catch (err) {
+        return false;
+      }
+    });
   },
 
   _areLayerFilesValid(layers) {
