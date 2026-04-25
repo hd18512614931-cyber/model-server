@@ -1,0 +1,132 @@
+/* pages/index/index.wxss */
+page {
+  background-color: #0f0c0b;
+}
+
+.immersive-container {
+  width: 100vw;
+  height: 100vh;
+  position: relative;
+  overflow: hidden;
+  background: radial-gradient(circle at 50% 40%, #301010 0%, #0a0808 80%);
+}
+
+/* 3D展示区 */
+.stage {
+  width: 100%;
+  height: 65%;
+  position: absolute;
+  top: 10%;
+  perspective: 1500rpx;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+}
+
+/* 舞台场景组，赋予3D旋转和缓动浮动动画 */
+.scene {
+  width: 440rpx;
+  height: 600rpx;
+  position: relative;
+  transform-style: preserve-3d;
+  /* 基础倾斜角度，展示3D景深 */
+  transform: rotateX(15deg) rotateY(-25deg);
+  transition: transform 1s ease;
+  animation: float 6s infinite ease-in-out alternate;
+}
+
+@keyframes float {
+  0% { transform: rotateX(15deg) rotateY(-25deg) translateY(0); }
+  100% { transform: rotateX(20deg) rotateY(-30deg) translateY(-30rpx); }
+}
+
+.layer {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  left: 0;
+  top: 0;
+  transition: transform 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  background-color: rgba(255,255,255,0.02);
+  box-shadow: 0 0 20rpx rgba(0,0,0,0.1);
+  border-radius: 8rpx;
+}
+
+.tap-hint {
+  position: absolute;
+  bottom: -60rpx;
+  color: rgba(255,255,255,0.6);
+  font-size: 24rpx;
+  letter-spacing: 4rpx;
+  animation: blink 2s infinite;
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 0.8; }
+}
+
+/* 底部操作区悬浮 */
+.floating-actions {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  padding: 80rpx 40rpx 60rpx;
+  box-sizing: border-box;
+  /* 向上渐变的暗色蒙版，确保文字可读 */
+  background: linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.8) 40%, rgba(0,0,0,0) 100%);
+  display: flex;
+  flex-direction: column;
+}
+
+.intro {
+  margin-bottom: 50rpx;
+  text-align: center;
+}
+
+.title {
+  display: block;
+  font-size: 52rpx;
+  font-weight: 900;
+  color: #F8E5A9; /* 金色 */
+  margin-bottom: 20rpx;
+  letter-spacing: 8rpx;
+  text-shadow: 0 4rpx 10rpx rgba(0,0,0,0.8);
+}
+
+.subtitle {
+  display: block;
+  font-size: 28rpx;
+  color: #CCCCCC;
+  letter-spacing: 4rpx;
+}
+
+.btn-create {
+  background: linear-gradient(135deg, #D9281C 0%, #aa1a10 100%);
+  color: #FFFFFF;
+  font-size: 34rpx;
+  font-weight: bold;
+  border-radius: 50rpx;
+  margin-bottom: 40rpx;
+  height: 96rpx;
+  line-height: 96rpx;
+  box-shadow: 0 8rpx 30rpx rgba(217, 40, 28, 0.4);
+  width: 80%;
+}
+
+.menu-row {
+  display: flex;
+  justify-content: space-around;
+  width: 100%;
+}
+
+.menu-btn {
+  color: rgba(248, 229, 169, 0.8);
+  font-size: 24rpx;
+  padding: 12rpx 28rpx;
+  border: 1rpx solid rgba(248, 229, 169, 0.3);
+  border-radius: 40rpx;
+  background: rgba(248, 229, 169, 0.05);
+}

@@ -1,0 +1,22 @@
+.layer-stack-container {
+  position: relative;
+  margin: 0 auto;
+  overflow: hidden;
+}
+
+.layer-image {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 1;
+  transition: opacity 0.3s ease-in-out;
+  /* mix-blend-mode 用于实现图层颜色的正片叠底效果，还原真实木版年画套色印刷感 */
+  mix-blend-mode: multiply;
+}
+
+.layer-image.hidden {
+  opacity: 0;
+  pointer-events: none;
+}

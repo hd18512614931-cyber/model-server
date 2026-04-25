@@ -1,0 +1,40 @@
+<view class="container">
+  <view class="header">
+    <text class="title">创作你的年画</text>
+    <text class="subtitle">上传图片，AI为您生成传统年画分色图层</text>
+  </view>
+
+  <!-- 图片上传预览区 -->
+  <view class="upload-section">
+    <view class="upload-area" bindtap="chooseImage" wx:if="{{!selectedImage}}">
+      <view class="upload-icon">+</view>
+      <text class="upload-text">点击上传图片 或 拍照</text>
+    </view>
+    <view class="preview-area" wx:else>
+      <image src="{{selectedImage}}" mode="aspectFit" class="preview-img"></image>
+      <view class="reselect-btn" bindtap="chooseImage">重新选择</view>
+    </view>
+  </view>
+
+  <!-- 风格选择区 -->
+  <view class="style-section">
+    <view class="section-title">选择风格类型（可选）</view>
+    <scroll-view class="style-scroll" scroll-x="true">
+      <view class="style-list">
+        <block wx:for="{{styleList}}" wx:key="id">
+          <view class="style-item {{selectedStyle === item.id ? 'active' : ''}}" 
+                bindtap="selectStyle" data-id="{{item.id}}">
+            {{item.name}}
+          </view>
+        </block>
+      </view>
+    </scroll-view>
+  </view>
+
+  <!-- 底部操作按钮 -->
+  <view class="footer-btn">
+    <button class="submit-btn" loading="{{isLoading}}" disabled="{{!selectedImage || isLoading}}" bindtap="startSeparation">
+      {{isLoading ? 'AI分色中...' : '开始分色'}}
+    </button>
+  </view>
+</view>

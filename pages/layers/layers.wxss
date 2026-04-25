@@ -1,0 +1,128 @@
+/* pages/layers/layers.wxss */
+.container {
+  padding: 30rpx 40rpx;
+  min-height: 100vh;
+  background-color: #FAFAFA;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+}
+
+/* 顶部预览区 - 固定 3:4 宽高比 */
+.preview-container {
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  background-color: #FFFFFF;
+  border-radius: 16rpx;
+  box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.05);
+  overflow: hidden;
+  margin-bottom: 50rpx;
+}
+
+.empty-tip {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #999999;
+  font-size: 28rpx;
+}
+
+/* 中部图层控制栏 */
+.layers-section {
+  flex: 1;
+}
+
+.section-title {
+  font-size: 32rpx;
+  font-weight: bold;
+  color: #333333;
+  margin-bottom: 24rpx;
+}
+
+.layer-scroll {
+  width: 100%;
+  white-space: nowrap;
+}
+
+.layer-list {
+  display: inline-flex;
+  padding-bottom: 10rpx;
+}
+
+.layer-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-right: 32rpx;
+}
+
+/* 缩略图样式 */
+.layer-thumb {
+  width: 120rpx;
+  height: 160rpx;
+  background-color: #FFFFFF;
+  border: 4rpx solid #EEEEEE;
+  border-radius: 12rpx;
+  padding: 8rpx;
+  margin-bottom: 16rpx;
+  transition: all 0.3s ease;
+  box-sizing: border-box;
+}
+
+.layer-thumb image {
+  width: 100%;
+  height: 100%;
+  background-color: #F8F8F8;
+}
+
+/* 隐藏状态滤镜 */
+.layer-thumb.disabled {
+  opacity: 0.4;
+  border-color: #EEEEEE !important;
+}
+
+.layer-name {
+  font-size: 24rpx;
+  color: #333333;
+  margin-bottom: 10rpx;
+}
+
+/* 底部操作按钮 */
+.footer-actions {
+  display: flex;
+  justify-content: space-between;
+  padding: 40rpx 0 env(safe-area-inset-bottom);
+  gap: 20rpx;
+}
+
+.btn {
+  flex: 1;
+  font-size: 28rpx;
+  padding: 2rpx 0;
+  border-radius: 40rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+}
+
+.btn::after {
+  display: none;
+}
+
+.btn-retry {
+  background-color: #F0F0F0;
+  color: #666666;
+  border: 2rpx solid #E0E0E0;
+}
+
+.btn-share {
+  background-color: #C8A063; /* 金色 */
+  color: #FFFFFF;
+}
+
+.btn-save {
+  background-color: #D9281C; /* 主题红 */
+  color: #FFFFFF;
+}

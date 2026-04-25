@@ -1,0 +1,40 @@
+{
+  "pages": [
+    "pages/index/index",
+    "pages/create/create",
+    "pages/layers/layers",
+    "pages/model3d/model3d",
+    "pages/model3d-viewer/model3d-viewer",
+    "pages/ai-3d/ai-3d"
+  ],
+  "window": {
+    "backgroundTextStyle": "light",
+    "navigationBarBackgroundColor": "#C41E3A",
+    "navigationBarTitleText": "佛山年画",
+    "navigationBarTextStyle": "white"
+  },
+  "tabBar": {
+    "color": "#999999",
+    "selectedColor": "#C41E3A",
+    "backgroundColor": "#ffffff",
+    "borderStyle": "black",
+    "list": [
+      {
+        "pagePath": "pages/index/index",
+        "text": "首页"
+      },
+      {
+        "pagePath": "pages/create/create",
+        "text": "AI创作"
+      },
+      {
+        "pagePath": "pages/layers/layers",
+        "text": "我的"
+      }
+    ]
+  },
+  "usingComponents": {
+    "layer-stack": "/components/layer-stack/layer-stack"
+  },
+  "sitemapLocation": "sitemap.json"
+}

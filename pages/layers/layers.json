@@ -1,0 +1,8 @@
+{
+  "usingComponents": {
+    "layer-stack": "/components/layer-stack/layer-stack"
+  },
+  "navigationBarTitleText": "年画图层",
+  "navigationBarBackgroundColor": "#D9281C",
+  "navigationBarTextStyle": "white"
+}

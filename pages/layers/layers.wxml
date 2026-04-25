@@ -1,0 +1,35 @@
+<view class="container">
+  <!-- 顶部：图层叠加预览区 -->
+  <view class="preview-container">
+    <layer-stack layers="{{layers}}" wx:if="{{layers.length > 0}}"></layer-stack>
+    <view class="empty-tip" wx:else>暂无图层数据</view>
+  </view>
+
+  <!-- 中部：图层控制 -->
+  <view class="layers-section">
+    <view class="section-title">分色展示 (点击切换)</view>
+    <scroll-view scroll-x class="layer-scroll">
+      <view class="layer-list">
+        <view wx:for="{{layers}}" wx:key="id" class="layer-item" bindtap="toggleLayer" data-index="{{index}}">
+          <view class="layer-thumb {{!item.active ? 'disabled' : ''}}" style="border-color: {{item.active ? item.color : '#EEEEEE'}}">
+            <image src="{{item.url}}" mode="aspectFit"></image>
+          </view>
+          <text class="layer-name">{{item.name}}</text>
+          <view class="toggle-icon">
+            <icon type="success" size="16" color="{{item.active ? item.color : '#CCCCCC'}}"/>
+          </view>
+        </view>
+      </view>
+    </scroll-view>
+  </view>
+
+  <!-- 底部操作按钮 -->
+  <view class="footer-actions">
+    <button class="btn btn-retry" bindtap="retryCreate">重新创作</button>
+    <button class="btn btn-share" open-type="share">分享</button>
+    <button class="btn btn-save" bindtap="saveToAlbum">保存作品</button>
+  </view>
+  
+  <!-- 用于图片合成的隐藏Canvas -->
+  <canvas canvas-id="mergeCanvas" style="width: {{canvasWidth}}px; height: {{canvasHeight}}px; position: absolute; left: -9999px;"></canvas>
+</view>

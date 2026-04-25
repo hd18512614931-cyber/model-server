@@ -1,0 +1,32 @@
+<view class="viewer-page">
+  <!-- 悬浮返回按钮 -->
+  <view class="float-back-btn" bindtap="goBack">
+    <text class="float-back-icon">←</text>
+  </view>
+
+  <!-- WebGL Canvas 全屏 -->
+  <canvas
+    type="webgl"
+    id="glCanvas"
+    class="gl-canvas"
+    bindtouchstart="onTouchStart"
+    bindtouchmove="onTouchMove"
+    bindtouchend="onTouchEnd"
+  ></canvas>
+
+  <!-- 底部模型名称 -->
+  <view class="model-name-bar">
+    <text class="model-name-text">{{modelName}}</text>
+  </view>
+
+  <!-- 底部提示 -->
+  <view class="hint-bar">
+    <text class="hint-text">单指旋转 · 双指缩放</text>
+  </view>
+
+  <!-- 加载中 -->
+  <view class="loading-mask" wx:if="{{loading}}">
+    <view class="spinner"></view>
+    <text class="loading-text">模型加载中...</text>
+  </view>
+</view>
