@@ -13,7 +13,7 @@
   </view>
 
   <view
-    class="stage-wrapper"
+    class="stage-wrapper {{slideDirection}}"
     wx:if="{{!loading}}"
     bindtouchstart="onTouchStart"
     bindtouchmove="onTouchMove"
@@ -34,5 +34,16 @@
         ></image>
       </view>
     </view>
+  </view>
+
+  <view class="arrow-btn arrow-left" wx:if="{{!loading && currentIndex > 0}}" bindtap="prevItem">
+    <text class="arrow-icon">‹</text>
+  </view>
+  <view class="arrow-btn arrow-right" wx:if="{{!loading && currentIndex < colorLayersList.length - 1}}" bindtap="nextItem">
+    <text class="arrow-icon">›</text>
+  </view>
+
+  <view class="page-indicator" wx:if="{{!loading && colorLayersList.length > 0}}">
+    <text class="indicator-text">{{currentIndex + 1}} / {{colorLayersList.length}}</text>
   </view>
 </view>

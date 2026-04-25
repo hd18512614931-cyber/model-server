@@ -1,5 +1,7 @@
 const API_URL = 'https://model-server-rosy.vercel.app/api/split-colors';
-const CACHE_KEY = 'colorLayers_demo';
+const CACHE_LIST_KEY = 'colorLayersList';
+const LEGACY_CACHE_KEY = 'colorLayers_demo';
+const MAX_RECORDS = 10;
 const DEMO_IMAGE_PATHS = ['/images/nianhua-demo.jpg', 'images/nianhua-demo.jpg'];
 const EXPLODED_TRANSFORMS = [
   'translateZ(200px) translateY(-80px)',
@@ -17,21 +19,25 @@ Page({
     scale: 1,
     rotateX: 55,
     rotateZ: -30,
+    colorLayersList: [],
+    currentIndex: 0,
+    slideDirection: '',
     layers: []
   },
 
   onLoad() {
-    this._initialPinchDistance = 0;
-    this._initialScale = 1;
-    this._lastTouchX = 0;
-    this._lastTouchY = 0;
-    this._touchStartX = 0;
-    this._touchStartY = 0;
-    this._touchMoved = false;
+    this._resetTouchState();
+    this._isSwitching = false;
 
-    const cachedLayers = this._getValidCachedLayers();
-    if (cachedLayers) {
-      this._renderLayers(cachedLayers, false);
+    const cachedList = this._getValidColorLayersList();
+    if (cachedList.length > 0) {
+      this.setData({
+        loading: false,
+        colorLayersList: cachedList,
+        currentIndex: 0
+      }, () => {
+        this.applyCurrentLayers();
+      });
       return;
     }
 
@@ -46,11 +52,46 @@ Page({
     if (this._touchMoved) return;
 
     const isExploded = !this.data.isExploded;
+    this.setData({ isExploded }, () => {
+      this.updateLayerStyles();
+    });
+  },
+
+  prevItem() {
+    if (this.data.currentIndex <= 0) return;
+    this._switchItem(this.data.currentIndex - 1, 'right');
+  },
+
+  nextItem() {
+    if (this.data.currentIndex >= this.data.colorLayersList.length - 1) return;
+    this._switchItem(this.data.currentIndex + 1, 'left');
+  },
+
+  applyCurrentLayers() {
+    const current = this.data.colorLayersList[this.data.currentIndex];
+    if (!current || !Array.isArray(current.layers)) return;
+
+    const fs = wx.getFileSystemManager();
+    const validLayers = current.layers.filter((layer) => {
+      try {
+        fs.accessSync(layer.tempPath);
+        return true;
+      } catch (err) {
+        return false;
+      }
+    });
+    if (validLayers.length === 0) return;
+
+    this.setData({ layers: validLayers }, () => {
+      this.updateLayerStyles();
+    });
+  },
+
+  updateLayerStyles() {
     this.setData({
-      isExploded,
       layers: this.data.layers.map((layer, index) => ({
         ...layer,
-        layerStyle: this._getLayerStyle(index, isExploded)
+        layerStyle: this._getLayerStyle(index, this.data.isExploded)
       }))
     });
   },
@@ -122,16 +163,25 @@ Page({
         return this._writeLayerToFile(layer, index);
       }));
 
-      wx.setStorageSync(CACHE_KEY, {
-        layers: layerFiles.map((layer) => ({
-          tempPath: layer.tempPath,
-          color: layer.color,
-          label: layer.label
-        })),
+      const record = {
+        id: 'demo',
+        title: '佛山木版年画（示例）',
+        layers: layerFiles,
         timestamp: Date.now()
-      });
+      };
+      const colorLayersList = this._saveColorLayersList([record]);
 
-      this._renderLayers(layerFiles, false);
+      this.setData({
+        loading: false,
+        colorLayersList,
+        currentIndex: 0,
+        isExploded: false,
+        scale: 1,
+        rotateX: 55,
+        rotateZ: -30
+      }, () => {
+        this.applyCurrentLayers();
+      });
     } catch (err) {
       console.error('[五色分层] 加载失败:', err);
       this.setData({ loading: false, layers: [] });
@@ -142,31 +192,98 @@ Page({
     }
   },
 
-  _getValidCachedLayers() {
-    const cache = wx.getStorageSync(CACHE_KEY);
-    if (!cache || !Array.isArray(cache.layers) || cache.layers.length === 0) return null;
+  _getValidColorLayersList() {
+    const migratedList = this._getMigratedLegacyList();
+    const storedList = wx.getStorageSync(CACHE_LIST_KEY);
+    const sourceList = Array.isArray(storedList) && storedList.length > 0 ? storedList : migratedList;
+    if (!Array.isArray(sourceList) || sourceList.length === 0) return [];
 
+    const validList = sourceList.filter((record) => {
+      return record && Array.isArray(record.layers) && record.layers.length > 0 && this._areLayerFilesValid(record.layers);
+    }).slice(0, MAX_RECORDS);
+
+    if (validList.length > 0) {
+      wx.setStorageSync(CACHE_LIST_KEY, validList);
+    } else {
+      wx.removeStorageSync(CACHE_LIST_KEY);
+    }
+
+    return validList;
+  },
+
+  _getMigratedLegacyList() {
+    const legacy = wx.getStorageSync(LEGACY_CACHE_KEY);
+    if (!legacy || !Array.isArray(legacy.layers) || legacy.layers.length === 0) return [];
+    if (!this._areLayerFilesValid(legacy.layers)) {
+      wx.removeStorageSync(LEGACY_CACHE_KEY);
+      return [];
+    }
+
+    const record = {
+      id: 'demo',
+      title: '佛山木版年画（示例）',
+      layers: legacy.layers.map((layer) => ({
+        tempPath: layer.tempPath,
+        color: layer.color,
+        label: layer.label
+      })),
+      timestamp: legacy.timestamp || Date.now()
+    };
+    wx.removeStorageSync(LEGACY_CACHE_KEY);
+    return [record];
+  },
+
+  _saveColorLayersList(records) {
+    const list = records.slice(0, MAX_RECORDS).map((record) => ({
+      id: record.id,
+      title: record.title,
+      layers: record.layers.map((layer) => ({
+        tempPath: layer.tempPath,
+        color: layer.color,
+        label: layer.label
+      })),
+      timestamp: record.timestamp
+    }));
+    wx.setStorageSync(CACHE_LIST_KEY, list);
+    return list;
+  },
+
+  _areLayerFilesValid(layers) {
     const fs = wx.getFileSystemManager();
     try {
-      cache.layers.forEach((layer) => {
+      layers.forEach((layer) => {
         fs.accessSync(layer.tempPath);
       });
-      return cache.layers;
+      return true;
     } catch (err) {
-      wx.removeStorageSync(CACHE_KEY);
-      return null;
+      return false;
     }
   },
 
-  _renderLayers(layers, isExploded) {
-    this.setData({
-      loading: false,
-      isExploded,
-      layers: layers.map((layer, index) => ({
-        ...layer,
-        layerStyle: this._getLayerStyle(index, isExploded)
-      }))
-    });
+  _switchItem(newIndex, direction) {
+    if (this._isSwitching) return;
+    this._isSwitching = true;
+
+    const outClass = direction === 'left' ? 'slide-out-left' : 'slide-out-right';
+    const inClass = direction === 'left' ? 'slide-in-right' : 'slide-in-left';
+    this.setData({ slideDirection: outClass });
+
+    setTimeout(() => {
+      this.setData({
+        currentIndex: newIndex,
+        rotateX: 55,
+        rotateZ: -30,
+        scale: 1,
+        isExploded: false,
+        slideDirection: inClass
+      }, () => {
+        this.applyCurrentLayers();
+        setTimeout(() => {
+          this.setData({ slideDirection: '' });
+          this._isSwitching = false;
+        }, 200);
+      });
+    }, 200);
   },
 
   _readDemoImageBase64() {
@@ -264,5 +381,15 @@ Page({
 
   _clamp(value, min, max) {
     return Math.max(min, Math.min(max, value));
+  },
+
+  _resetTouchState() {
+    this._initialPinchDistance = 0;
+    this._initialScale = 1;
+    this._lastTouchX = 0;
+    this._lastTouchY = 0;
+    this._touchStartX = 0;
+    this._touchStartY = 0;
+    this._touchMoved = false;
   }
 });
