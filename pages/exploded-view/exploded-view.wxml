@@ -3,36 +3,36 @@
     <text class="back-icon">←</text>
   </view>
 
-  <view class="page-header">
-    <text class="page-title">佛山木版年画 · 五色套印工艺</text>
+  <view class="float-title">
+    <text>佛山木版年画 · 五色套印</text>
   </view>
 
   <view class="loading-panel" wx:if="{{loading}}">
     <view class="loading-ring"></view>
-    <text class="loading-text">{{loadingText}}</text>
+    <text class="loading-text">正在分析色层...</text>
   </view>
 
-  <view class="viewer-panel" wx:else>
+  <view
+    class="stage-wrapper"
+    wx:if="{{!loading}}"
+    bindtouchstart="onTouchStart"
+    bindtouchmove="onTouchMove"
+    bindtouchend="onTouchEnd"
+  >
     <view class="stage" bindtap="toggleExplode">
-      <view class="layers-container">
-        <block wx:for="{{layers}}" wx:key="name">
-          <image
-            class="layer"
-            src="{{item.src}}"
-            mode="aspectFit"
-            style="{{item.style}}"
-          ></image>
-        </block>
+      <view
+        class="layers-container"
+        style="transform: rotateX({{rotateX}}deg) rotateZ({{rotateZ}}deg) scale({{scale}});"
+      >
+        <image
+          wx:for="{{layers}}"
+          wx:key="index"
+          class="layer"
+          src="{{item.tempPath}}"
+          mode="aspectFit"
+          style="{{item.layerStyle}}"
+        ></image>
       </view>
-    </view>
-
-    <view class="legend-row">
-      <block wx:for="{{layers}}" wx:key="name">
-        <view class="legend-item">
-          <view class="legend-swatch" style="background: {{item.color}};"></view>
-          <text>{{item.label}}</text>
-        </view>
-      </block>
     </view>
   </view>
 </view>

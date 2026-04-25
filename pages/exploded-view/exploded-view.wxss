@@ -8,9 +8,12 @@ page {
   height: 100vh;
   overflow: hidden;
   box-sizing: border-box;
-  padding: 96rpx 32rpx 32rpx;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   background:
-    linear-gradient(180deg, rgba(196, 30, 58, 0.26), rgba(23, 17, 13, 0) 34%),
+    linear-gradient(180deg, rgba(196, 30, 58, 0.22), rgba(23, 17, 13, 0) 30%),
     #17110d;
 }
 
@@ -35,23 +38,22 @@ page {
   line-height: 1;
 }
 
-.page-header {
-  position: relative;
-  z-index: 2;
+.float-title {
+  position: fixed;
+  top: 62rpx;
+  left: 120rpx;
+  right: 40rpx;
+  z-index: 20;
+  color: rgba(255, 241, 207, 0.68);
+  font-size: 26rpx;
+  line-height: 1.4;
   text-align: center;
-  margin-bottom: 70rpx;
-}
-
-.page-title {
-  display: block;
-  color: #fff1cf;
-  font-size: 38rpx;
-  font-weight: 700;
-  line-height: 1.35;
+  pointer-events: none;
 }
 
 .loading-panel {
-  height: 640rpx;
+  width: 100%;
+  height: 100%;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -78,15 +80,20 @@ page {
   font-size: 28rpx;
 }
 
-.viewer-panel {
-  position: relative;
-  z-index: 1;
+.stage-wrapper {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .stage {
-  width: 600rpx;
-  height: 600rpx;
-  margin: 0 auto;
+  width: 85vw;
+  height: 85vw;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   perspective: 1200px;
   cursor: pointer;
 }
@@ -96,8 +103,7 @@ page {
   width: 100%;
   height: 100%;
   transform-style: preserve-3d;
-  transform: rotateX(55deg) rotateZ(-30deg);
-  transition: transform 0.6s ease;
+  transition: transform 0.18s ease-out;
 }
 
 .layer {
@@ -109,30 +115,4 @@ page {
   transition: transform 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
   opacity: 0.92;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
-}
-
-.legend-row {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 16rpx;
-  margin-top: 56rpx;
-}
-
-.legend-item {
-  display: flex;
-  align-items: center;
-  height: 46rpx;
-  padding: 0 18rpx;
-  border-radius: 999rpx;
-  background: rgba(255, 255, 255, 0.08);
-  color: rgba(255, 247, 230, 0.86);
-  font-size: 22rpx;
-}
-
-.legend-swatch {
-  width: 18rpx;
-  height: 18rpx;
-  border-radius: 50%;
-  margin-right: 10rpx;
 }
