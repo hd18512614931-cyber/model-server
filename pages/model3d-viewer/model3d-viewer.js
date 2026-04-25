@@ -63,7 +63,8 @@ Page({
         this._platform = platform;
         THREE.PLATFORM.set(platform);
 
-        const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+        const gl = canvas.getContext('webgl', { antialias: true });
+        const renderer = new THREE.WebGLRenderer({ canvas, context: gl, antialias: true });
         renderer.setPixelRatio(dpr);
         renderer.setSize(info.windowWidth, info.windowHeight);
         renderer.setClearColor(0x1a1a2e);
@@ -97,17 +98,30 @@ Page({
       return;
     }
 
+    if (this._modelUrl.startsWith('wxfile://') || this._modelUrl.startsWith(wx.env.USER_DATA_PATH)) {
+      this._loadGLBFromPath(this._modelUrl);
+      return;
+    }
+
+    wx.showLoading({ title: '下载模型中...' });
     wx.downloadFile({
       url: this._modelUrl,
+      timeout: 60000,
       success: (res) => {
+        wx.hideLoading();
         if (res.statusCode === 200) {
           this._loadGLBFromPath(res.tempFilePath);
         } else {
+          console.error('[3D] 下载HTTP错误:', res.statusCode);
+          wx.showToast({ title: '模型下载失败', icon: 'none' });
           this._createDemoCube();
         }
       },
-      fail: () => {
-        this._loadGLBFromPath(this._modelUrl);
+      fail: (err) => {
+        wx.hideLoading();
+        console.error('[3D] 下载失败:', err);
+        wx.showToast({ title: '模型下载失败，请重试', icon: 'none' });
+        this._createDemoCube();
       }
     });
   },
