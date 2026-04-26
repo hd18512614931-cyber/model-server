@@ -20,11 +20,14 @@
     bindtouchend="onTouchEnd"
   >
     <view class="stage" bindtap="toggleExplode">
-      <view class="paper-backdrop"></view>
       <view
         class="layers-container"
         style="transform: rotateX({{rotateX}}deg) rotateZ({{rotateZ}}deg) scale({{scale}});"
       >
+        <view
+          class="paper-backdrop"
+          style="transform: {{isExploded ? 'translateZ(-240px) translateY(96px)' : 'translateZ(0px) translateY(0px)'}};"
+        ></view>
         <image
           wx:for="{{layers}}"
           wx:key="index"
