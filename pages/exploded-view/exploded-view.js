@@ -51,25 +51,47 @@ Page({
 
   async onLoad() {
     this._resetTouchState();
+    try {
+      const oldCache = wx.getStorageSync(PRESET_CACHE_KEY);
+      if (oldCache && typeof oldCache !== 'object') {
+        wx.removeStorageSync(PRESET_CACHE_KEY);
+      }
+    } catch (err) {
+      wx.removeStorageSync(PRESET_CACHE_KEY);
+    }
+
     this._isSwitching = false;
     this.setData({
       loading: true,
       loadingProgress: '准备预置图层'
     });
 
-    const colorLayersList = [
-      ...await this._getPresetGalleries(),
-      ...this._getValidUserGalleries()
-    ];
+    try {
+      const presetGalleries = await this._getPresetGalleries();
+      const userGalleries = this._getValidUserGalleries();
+      const colorLayersList = [...presetGalleries, ...userGalleries];
 
-    this.setData({
-      colorLayersList,
-      currentIndex: 0,
-      loading: false,
-      loadingProgress: ''
-    }, () => {
-      this.applyCurrentLayers();
-    });
+      this.setData({
+        colorLayersList,
+        currentIndex: 0,
+        loading: false,
+        loadingProgress: ''
+      }, () => {
+        if (colorLayersList.length > 0) {
+          this.applyCurrentLayers();
+        }
+      });
+    } catch (err) {
+      console.error('[分色展厅] 加载失败:', err);
+      this.setData({
+        loading: false,
+        loadingProgress: ''
+      });
+      wx.showToast({
+        title: '图层加载失败，请重试',
+        icon: 'none'
+      });
+    }
   },
 
   goBack() {
@@ -222,41 +244,58 @@ Page({
     const galleries = [];
 
     for (const gallery of PRESET_GALLERIES) {
-      let layers = this._getCachedPresetLayers(gallery, cache[gallery.id]);
+      try {
+        let layers = this._getCachedPresetLayers(gallery, cache[gallery.id]);
 
-      if (layers.length !== gallery.layerCount) {
-        this.setData({ loadingProgress: `下载${gallery.title}` });
-        layers = await this._downloadPresetLayers(gallery);
-      }
+        if (layers.length !== gallery.layerCount) {
+          this.setData({ loadingProgress: '下载' + gallery.title });
+          layers = await this._downloadPresetLayers(gallery);
+        }
 
-      if (layers.length === gallery.layerCount) {
-        nextCache[gallery.id] = {
-          id: gallery.id,
-          title: gallery.title,
-          isPreset: true,
-          layers,
-          timestamp: Date.now()
-        };
-        galleries.push({
-          id: gallery.id,
-          title: gallery.title,
-          isPreset: true,
-          layers
-        });
+        if (layers.length === gallery.layerCount) {
+          nextCache[gallery.id] = {
+            id: gallery.id,
+            title: gallery.title,
+            isPreset: true,
+            layers,
+            timestamp: Date.now()
+          };
+          galleries.push({
+            id: gallery.id,
+            title: gallery.title,
+            isPreset: true,
+            layers
+          });
+        }
+      } catch (err) {
+        console.error('[分色展厅] 预置图处理失败:', gallery.id, err);
       }
     }
 
-    wx.setStorageSync(PRESET_CACHE_KEY, nextCache);
+    try {
+      wx.setStorageSync(PRESET_CACHE_KEY, nextCache);
+    } catch (err) {
+      console.error('[分色展厅] 缓存保存失败:', err);
+    }
+
     return galleries;
   },
 
   _getCachedPresetLayers(gallery, cachedGallery) {
-    const storedLayers = cachedGallery && Array.isArray(cachedGallery.layers) ? cachedGallery.layers : [];
+    if (!cachedGallery || !Array.isArray(cachedGallery.layers)) {
+      const expectedLayers = this._buildPresetLayersFromLocalPaths(gallery);
+      if (this._areLayerFilesValid(expectedLayers)) {
+        return expectedLayers;
+      }
+      return [];
+    }
+
+    const storedLayers = cachedGallery.layers;
     if (storedLayers.length === gallery.layerCount && this._areLayerFilesValid(storedLayers)) {
       return storedLayers.map((layer, index) => ({
         tempPath: layer.tempPath,
-        color: layer.color || PRESET_LAYER_META[index].color,
-        label: layer.label || PRESET_LAYER_META[index].label
+        color: layer.color || (PRESET_LAYER_META[index] ? PRESET_LAYER_META[index].color : ''),
+        label: layer.label || (PRESET_LAYER_META[index] ? PRESET_LAYER_META[index].label : '图层' + (index + 1))
       }));
     }
 
