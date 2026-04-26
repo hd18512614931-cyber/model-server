@@ -26,75 +26,29 @@ module.exports = async (req, res) => {
     const { width, height } = metadata;
     const rawPixels = await image.ensureAlpha().raw().toBuffer();
 
-    const layers = [
-      {
-        name: 'black',
-        label: '墨线稿',
-        color: '#1a1a1a',
-        filter: (r, g, b) => {
-          const l = (Math.max(r, g, b) + Math.min(r, g, b)) / 2;
-          return l < 80;
-        }
-      },
-      {
-        name: 'red',
-        label: '大红',
-        color: '#cc2936',
-        filter: (r, g, b) => {
-          const [h, s, l] = rgbToHsl(r, g, b);
-          return (h < 30 || h > 330) && s > 0.3 && l >= 0.15 && l < 0.75;
-        }
-      },
-      {
-        name: 'green',
-        label: '翠绿',
-        color: '#2d6a4f',
-        filter: (r, g, b) => {
-          const [h, s, l] = rgbToHsl(r, g, b);
-          return h >= 80 && h <= 180 && s > 0.2 && l >= 0.1 && l < 0.8;
-        }
-      },
-      {
-        name: 'yellow',
-        label: '橙黄',
-        color: '#e6a817',
-        filter: (r, g, b) => {
-          const [h, s, l] = rgbToHsl(r, g, b);
-          return h >= 30 && h < 80 && s > 0.2 && l >= 0.15 && l < 0.85;
-        }
-      },
-      {
-        name: 'skin',
-        label: '肉粉',
-        color: '#e8b4a2',
-        filter: (r, g, b) => {
-          const [h, s, l] = rgbToHsl(r, g, b);
-          return h >= 5 && h <= 45 && s > 0.1 && s <= 0.6 && l >= 0.55;
-        }
-      }
-    ];
+    const mainColors = detectMainColors(rawPixels, width, height);
 
     const results = [];
-    for (const layer of layers) {
+    for (let layerIndex = 0; layerIndex < mainColors.length; layerIndex++) {
+      const mainColor = mainColors[layerIndex];
       const layerPixels = Buffer.alloc(width * height * 4);
       let pixelCount = 0;
       for (let i = 0; i < width * height; i++) {
         const offset = i * 4;
         const r = rawPixels[offset], g = rawPixels[offset + 1], b = rawPixels[offset + 2], a = rawPixels[offset + 3];
-        const isWhiteBackground = r > 240 && g > 240 && b > 240;
-        if (a > 10 && !isWhiteBackground && layer.filter(r, g, b)) {
+        if (a > 10 && getQuantizedKey(r, g, b) === mainColor.key) {
           layerPixels[offset] = r;
           layerPixels[offset + 1] = g;
           layerPixels[offset + 2] = b;
-          layerPixels[offset + 3] = a;
+          layerPixels[offset + 3] = 255;
           pixelCount++;
         }
       }
       const pngBuffer = await sharp(layerPixels, { raw: { width, height, channels: 4 } }).png().toBuffer();
       results.push({
-        name: layer.name,
-        label: layer.label,
-        color: layer.color,
+        name: 'color_' + (layerIndex + 1),
+        label: getColorLabel(mainColor.r, mainColor.g, mainColor.b, layerIndex),
+        color: rgbToHex(mainColor.r, mainColor.g, mainColor.b),
         pixelCount,
         data: 'data:image/png;base64,' + pngBuffer.toString('base64')
       });
@@ -106,6 +60,67 @@ module.exports = async (req, res) => {
     res.status(500).json({ error: '分色处理失败: ' + err.message });
   }
 };
+
+function detectMainColors(rawPixels, width, height) {
+  const totalPixels = width * height;
+  const minPixelCount = Math.max(1, Math.floor(totalPixels * 0.01));
+  const colorMap = new Map();
+
+  for (let i = 0; i < totalPixels; i++) {
+    const offset = i * 4;
+    const r = rawPixels[offset], g = rawPixels[offset + 1], b = rawPixels[offset + 2], a = rawPixels[offset + 3];
+    if (a <= 10 || isNearWhite(r, g, b)) continue;
+
+    const quantized = quantizeColor(r, g, b);
+    const key = quantized.join(',');
+    const existing = colorMap.get(key);
+    if (existing) {
+      existing.count++;
+    } else {
+      colorMap.set(key, {
+        key,
+        r: quantized[0],
+        g: quantized[1],
+        b: quantized[2],
+        count: 1
+      });
+    }
+  }
+
+  const sortedColors = Array.from(colorMap.values()).sort((a, b) => b.count - a.count);
+  const filteredColors = sortedColors.filter((color) => color.count >= minPixelCount);
+  const candidates = filteredColors.length >= 2 ? filteredColors : sortedColors.slice(0, 2);
+  return candidates.slice(0, 8);
+}
+
+function quantizeColor(r, g, b) {
+  return [
+    Math.floor(r / 32) * 32,
+    Math.floor(g / 32) * 32,
+    Math.floor(b / 32) * 32
+  ];
+}
+
+function getQuantizedKey(r, g, b) {
+  return quantizeColor(r, g, b).join(',');
+}
+
+function isNearWhite(r, g, b) {
+  return r > 220 && g > 220 && b > 220;
+}
+
+function rgbToHex(r, g, b) {
+  return '#' + [r, g, b].map((value) => value.toString(16).padStart(2, '0')).join('').toUpperCase();
+}
+
+function getColorLabel(r, g, b, index) {
+  const [h, s, l] = rgbToHsl(r, g, b);
+  if (l < 0.22) return '墨版';
+  if ((h < 30 || h >= 330) && s > 0.25) return '红版';
+  if (h >= 30 && h < 80 && s > 0.2) return '黄版';
+  if (h >= 80 && h <= 180 && s > 0.18) return '绿版';
+  return '色版' + (index + 1);
+}
 
 function rgbToHsl(r, g, b) {
   r /= 255; g /= 255; b /= 255;
