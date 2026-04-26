@@ -15,7 +15,10 @@
         ></image>
       </block>
     </view>
-    <view class="tap-hint" wx:if="{{!hasTapped}}">点击画面体验套色层叠</view>
+    <view class="loading-hint" wx:if="{{layersLoading}}">
+      <text style="color: rgba(255,255,255,0.6); font-size: 26rpx;">加载中...</text>
+    </view>
+    <view class="tap-hint" wx:if="{{!hasTapped && !layersLoading}}">点击画面体验套色层叠</view>
   </view>
 
   <!-- 底部功能入口 (悬浮) -->

@@ -1,16 +1,29 @@
 const app = getApp();
+const LAYER_BASE_URL = 'https://model-server-rosy.vercel.app/layers';
+const HOME_LAYER_URLS = [
+  LAYER_BASE_URL + '/nianhua-demo/layer_4.png',
+  LAYER_BASE_URL + '/nianhua-demo/layer_3.png',
+  LAYER_BASE_URL + '/nianhua-demo/layer_2.png',
+  LAYER_BASE_URL + '/nianhua-demo/layer_1.png',
+  LAYER_BASE_URL + '/nianhua-demo/layer_0.png'
+];
+
+function buildHomeLayers(paths) {
+  return paths.map((url, index) => ({
+    id: index + 1,
+    name: '图层' + (index + 1),
+    url,
+    zDist: -120 + index * 60,
+    order: index + 1
+  }));
+}
 
 Page({
   data: {
     isExploded: true,
     hasTapped: false,
-    layers: [
-      { id: 1, name: "图层一", url: "/images/layers/nianhua-demo/layer_4.png", zDist: -120, order: 1 },
-      { id: 2, name: "图层二", url: "/images/layers/nianhua-demo/layer_3.png", zDist: -60, order: 2 },
-      { id: 3, name: "图层三", url: "/images/layers/nianhua-demo/layer_2.png", zDist: 0, order: 3 },
-      { id: 4, name: "图层四", url: "/images/layers/nianhua-demo/layer_1.png", zDist: 60, order: 4 },
-      { id: 5, name: "图层五", url: "/images/layers/nianhua-demo/layer_0.png", zDist: 120, order: 5 }
-    ],
+    layersLoading: true,
+    layers: buildHomeLayers(HOME_LAYER_URLS),
     rotateX: 15,
     rotateY: -25,
     scale: 1,
@@ -23,11 +36,101 @@ Page({
     _isTouchMoved: false
   },
 
-  onLoad() {
-    // 进场后自动合上一次，增强效果
+  async onLoad() {
+    await this._prepareHomeLayers();
+    this._autoCollapseLayers();
+  },
+
+  _autoCollapseLayers() {
     setTimeout(() => {
       this.setData({ isExploded: false });
     }, 1500);
+  },
+
+  async _prepareHomeLayers() {
+    const cachedLayers = wx.getStorageSync('homeLayers');
+    if (Array.isArray(cachedLayers) && cachedLayers.length === 5 && this._areHomeLayersValid(cachedLayers)) {
+      this.setData({
+        layers: buildHomeLayers(cachedLayers.map((layer) => layer.localPath)),
+        layersLoading: false,
+        isExploded: true
+      });
+      return;
+    }
+
+    this.setData({ layersLoading: true });
+    const downloadedLayers = [];
+
+    for (let i = 0; i < HOME_LAYER_URLS.length; i++) {
+      try {
+        const localPath = await this._downloadHomeLayer(HOME_LAYER_URLS[i], i);
+        downloadedLayers.push({ localPath });
+      } catch (err) {
+        console.error('下载图层失败:', HOME_LAYER_URLS[i], err);
+      }
+    }
+
+    if (downloadedLayers.length === HOME_LAYER_URLS.length) {
+      wx.setStorageSync('homeLayers', downloadedLayers);
+      this.setData({
+        layers: buildHomeLayers(downloadedLayers.map((layer) => layer.localPath)),
+        layersLoading: false,
+        isExploded: true
+      });
+      return;
+    }
+
+    wx.removeStorageSync('homeLayers');
+    this.setData({
+      layers: buildHomeLayers(HOME_LAYER_URLS),
+      layersLoading: false,
+      isExploded: true
+    });
+    wx.showToast({
+      title: '图层缓存失败，使用在线图层',
+      icon: 'none'
+    });
+  },
+
+  _areHomeLayersValid(layers) {
+    const fs = wx.getFileSystemManager();
+    try {
+      layers.forEach((layer) => {
+        fs.accessSync(layer.localPath);
+      });
+      return true;
+    } catch (err) {
+      return false;
+    }
+  },
+
+  _downloadHomeLayer(url, index) {
+    return new Promise((resolve, reject) => {
+      wx.downloadFile({
+        url,
+        timeout: 60000,
+        success: (res) => {
+          if (res.statusCode !== 200) {
+            reject(new Error('HTTP ' + res.statusCode));
+            return;
+          }
+
+          const fs = wx.getFileSystemManager();
+          const savePath = `${wx.env.USER_DATA_PATH}/home_layer_${index}.png`;
+          try {
+            fs.unlinkSync(savePath);
+          } catch (err) {}
+
+          try {
+            fs.saveFileSync(res.tempFilePath, savePath);
+            resolve(savePath);
+          } catch (err) {
+            reject(err);
+          }
+        },
+        fail: reject
+      });
+    });
   },
 
   toggleExplode() {

@@ -1,31 +1,30 @@
 const API_URL = 'https://model-server-rosy.vercel.app/api/split-colors';
 const USER_CACHE_KEY = 'userColorLayers';
+const PRESET_CACHE_KEY = 'presetColorLayers';
+const LAYER_BASE_URL = 'https://model-server-rosy.vercel.app/layers';
 const MAX_USER_RECORDS = 10;
 const PRESET_GALLERIES = [
   {
     id: 'nianhua-demo',
     title: '佛山木版年画示例',
     isPreset: true,
-    layers: [
-      { localPath: '/images/layers/nianhua-demo/layer_0.png', color: '#1a1a1a', label: '墨线稿' },
-      { localPath: '/images/layers/nianhua-demo/layer_1.png', color: '#cc2936', label: '大红' },
-      { localPath: '/images/layers/nianhua-demo/layer_2.png', color: '#2d6a4f', label: '翠绿' },
-      { localPath: '/images/layers/nianhua-demo/layer_3.png', color: '#e6a817', label: '橙黄' },
-      { localPath: '/images/layers/nianhua-demo/layer_4.png', color: '#e8b4a2', label: '肉粉' }
-    ]
+    remotePrefix: LAYER_BASE_URL + '/nianhua-demo',
+    layerCount: 5
   },
   {
     id: 'longtou',
     title: '龙头年画',
     isPreset: true,
-    layers: [
-      { localPath: '/images/layers/longtou/layer_0.png', color: '#1a1a1a', label: '墨线稿' },
-      { localPath: '/images/layers/longtou/layer_1.png', color: '#cc2936', label: '大红' },
-      { localPath: '/images/layers/longtou/layer_2.png', color: '#2d6a4f', label: '翠绿' },
-      { localPath: '/images/layers/longtou/layer_3.png', color: '#e6a817', label: '橙黄' },
-      { localPath: '/images/layers/longtou/layer_4.png', color: '#e8b4a2', label: '肉粉' }
-    ]
+    remotePrefix: LAYER_BASE_URL + '/longtou',
+    layerCount: 5
   }
+];
+const PRESET_LAYER_META = [
+  { color: '#1a1a1a', label: '墨线稿' },
+  { color: '#cc2936', label: '大红' },
+  { color: '#2d6a4f', label: '翠绿' },
+  { color: '#e6a817', label: '橙黄' },
+  { color: '#e8b4a2', label: '肉粉' }
 ];
 const EXPLODED_TRANSFORMS = [
   'translateZ(200px) translateY(-80px)',
@@ -50,19 +49,24 @@ Page({
     layers: []
   },
 
-  onLoad() {
+  async onLoad() {
     this._resetTouchState();
     this._isSwitching = false;
+    this.setData({
+      loading: true,
+      loadingProgress: '准备预置图层'
+    });
 
     const colorLayersList = [
-      ...this._getPresetGalleries(),
+      ...await this._getPresetGalleries(),
       ...this._getValidUserGalleries()
     ];
 
     this.setData({
       colorLayersList,
       currentIndex: 0,
-      loading: false
+      loading: false,
+      loadingProgress: ''
     }, () => {
       this.applyCurrentLayers();
     });
@@ -212,17 +216,112 @@ Page({
     return true;
   },
 
-  _getPresetGalleries() {
-    return PRESET_GALLERIES.map((gallery) => ({
-      id: gallery.id,
-      title: gallery.title,
-      isPreset: true,
-      layers: gallery.layers.map((layer) => ({
-        tempPath: layer.localPath,
-        color: layer.color,
-        label: layer.label
-      }))
+  async _getPresetGalleries() {
+    const cache = wx.getStorageSync(PRESET_CACHE_KEY) || {};
+    const nextCache = { ...cache };
+    const galleries = [];
+
+    for (const gallery of PRESET_GALLERIES) {
+      let layers = this._getCachedPresetLayers(gallery, cache[gallery.id]);
+
+      if (layers.length !== gallery.layerCount) {
+        this.setData({ loadingProgress: `下载${gallery.title}` });
+        layers = await this._downloadPresetLayers(gallery);
+      }
+
+      if (layers.length === gallery.layerCount) {
+        nextCache[gallery.id] = {
+          id: gallery.id,
+          title: gallery.title,
+          isPreset: true,
+          layers,
+          timestamp: Date.now()
+        };
+        galleries.push({
+          id: gallery.id,
+          title: gallery.title,
+          isPreset: true,
+          layers
+        });
+      }
+    }
+
+    wx.setStorageSync(PRESET_CACHE_KEY, nextCache);
+    return galleries;
+  },
+
+  _getCachedPresetLayers(gallery, cachedGallery) {
+    const storedLayers = cachedGallery && Array.isArray(cachedGallery.layers) ? cachedGallery.layers : [];
+    if (storedLayers.length === gallery.layerCount && this._areLayerFilesValid(storedLayers)) {
+      return storedLayers.map((layer, index) => ({
+        tempPath: layer.tempPath,
+        color: layer.color || PRESET_LAYER_META[index].color,
+        label: layer.label || PRESET_LAYER_META[index].label
+      }));
+    }
+
+    const expectedLayers = this._buildPresetLayersFromLocalPaths(gallery);
+    if (this._areLayerFilesValid(expectedLayers)) {
+      return expectedLayers;
+    }
+
+    return [];
+  },
+
+  _buildPresetLayersFromLocalPaths(gallery) {
+    return Array.from({ length: gallery.layerCount }, (_, index) => ({
+      tempPath: `${wx.env.USER_DATA_PATH}/layer_${gallery.id}_${index}.png`,
+      color: PRESET_LAYER_META[index].color,
+      label: PRESET_LAYER_META[index].label
     }));
+  },
+
+  async _downloadPresetLayers(gallery) {
+    const layers = [];
+
+    for (let i = 0; i < gallery.layerCount; i++) {
+      try {
+        const tempPath = await this._downloadPresetLayer(gallery, i);
+        layers.push({
+          tempPath,
+          color: PRESET_LAYER_META[i].color,
+          label: PRESET_LAYER_META[i].label
+        });
+      } catch (err) {
+        console.error('[分色展厅] 预置图层下载失败:', gallery.id, i, err);
+      }
+    }
+
+    return layers.length === gallery.layerCount ? layers : [];
+  },
+
+  _downloadPresetLayer(gallery, index) {
+    return new Promise((resolve, reject) => {
+      wx.downloadFile({
+        url: `${gallery.remotePrefix}/layer_${index}.png`,
+        timeout: 60000,
+        success: (res) => {
+          if (res.statusCode !== 200) {
+            reject(new Error('HTTP ' + res.statusCode));
+            return;
+          }
+
+          const fs = wx.getFileSystemManager();
+          const savePath = `${wx.env.USER_DATA_PATH}/layer_${gallery.id}_${index}.png`;
+          try {
+            fs.unlinkSync(savePath);
+          } catch (err) {}
+
+          try {
+            fs.saveFileSync(res.tempFilePath, savePath);
+            resolve(savePath);
+          } catch (err) {
+            reject(err);
+          }
+        },
+        fail: reject
+      });
+    });
   },
 
   _getValidUserGalleries() {

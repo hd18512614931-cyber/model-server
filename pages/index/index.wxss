@@ -54,6 +54,12 @@ page {
   animation: blink 2s infinite;
 }
 
+.loading-hint {
+  position: absolute;
+  bottom: -20rpx;
+  z-index: 20;
+}
+
 @keyframes blink {
   0%, 100% { opacity: 0.3; }
   50% { opacity: 0.8; }
