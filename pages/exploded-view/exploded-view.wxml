@@ -20,6 +20,7 @@
     bindtouchend="onTouchEnd"
   >
     <view class="stage" bindtap="toggleExplode">
+      <view class="paper-backdrop"></view>
       <view
         class="layers-container"
         style="transform: rotateX({{rotateX}}deg) rotateZ({{rotateZ}}deg) scale({{scale}});"
