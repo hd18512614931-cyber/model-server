@@ -1,6 +1,7 @@
 {
   "pages": [
     "pages/index/index",
+    "pages/ai-create/ai-create",
     "pages/create/create",
     "pages/layers/layers",
     "pages/exploded-view/exploded-view",

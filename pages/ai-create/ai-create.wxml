@@ -1,0 +1,35 @@
+<view class="ai-create-page">
+  <view class="header">
+    <text class="title">AI 年画创作</text>
+    <text class="subtitle">输入主题，生成适合五色套印的佛山木版年画</text>
+  </view>
+
+  <view class="form-panel">
+    <textarea
+      class="prompt-input"
+      value="{{inputText}}"
+      placeholder="输入创作主题，如：小猫、门神、福娃"
+      maxlength="80"
+      bindinput="onInput"
+      disabled="{{loading || splitLoading}}"
+    />
+    <button class="generate-btn" bindtap="onGenerate" loading="{{loading}}" disabled="{{loading || splitLoading}}">
+      生成年画
+    </button>
+  </view>
+
+  <view class="loading-panel" wx:if="{{loading}}">
+    <view class="loading-ring"></view>
+    <text class="loading-text">AI 正在创作中，请稍候（约30秒）...</text>
+  </view>
+
+  <view class="result-panel" wx:if="{{generatedImageUrl && !loading}}">
+    <image class="result-image" src="{{generatedImageUrl}}" mode="aspectFit"></image>
+    <view class="action-row">
+      <button class="secondary-btn" bindtap="onRegenerate" disabled="{{splitLoading}}">不满意，重新生成</button>
+      <button class="primary-btn" bindtap="onSplitColors" loading="{{splitLoading}}" disabled="{{splitLoading}}">
+        生成分色展示
+      </button>
+    </view>
+  </view>
+</view>

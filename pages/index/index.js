@@ -192,12 +192,8 @@ Page({
   },
 
   goToCreate() {
-    wx.switchTab({
-      url: '/pages/create/create'
-    }).catch(() => {
-      wx.navigateTo({
-        url: '/pages/create/create'
-      });
+    wx.navigateTo({
+      url: '/pages/ai-create/ai-create'
     });
   },
 
