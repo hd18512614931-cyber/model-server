@@ -100,7 +100,7 @@ Page({
         icon: 'success'
       });
       wx.navigateTo({
-        url: '/pages/exploded-view/exploded-view'
+        url: '/pages/exploded-view/exploded-view?showLatestUser=true'
       });
     } catch (err) {
       console.error('生成分色展示失败:', err);

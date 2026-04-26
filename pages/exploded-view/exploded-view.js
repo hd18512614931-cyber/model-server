@@ -49,7 +49,7 @@ Page({
     layers: []
   },
 
-  async onLoad() {
+  async onLoad(options = {}) {
     this._resetTouchState();
     try {
       const oldCache = wx.getStorageSync(PRESET_CACHE_KEY);
@@ -70,10 +70,12 @@ Page({
       const presetGalleries = await this._getPresetGalleries();
       const userGalleries = this._getValidUserGalleries();
       const colorLayersList = [...presetGalleries, ...userGalleries];
+      const shouldShowLatestUser = options.showLatestUser === 'true' && userGalleries.length > 0;
+      const currentIndex = shouldShowLatestUser ? presetGalleries.length : 0;
 
       this.setData({
         colorLayersList,
-        currentIndex: 0,
+        currentIndex,
         loading: false,
         loadingProgress: ''
       }, () => {
@@ -121,10 +123,10 @@ Page({
     const current = this.data.colorLayersList[this.data.currentIndex];
     if (!current || !Array.isArray(current.layers)) return;
 
-    const validLayers = current.isPreset ? current.layers : this._getExistingUserLayers(current.layers);
-    if (validLayers.length === 0) return;
+    const layers = current.layers;
+    if (layers.length === 0) return;
 
-    this.setData({ layers: validLayers }, () => {
+    this.setData({ layers }, () => {
       this.updateLayerStyles();
     });
   },
@@ -364,12 +366,19 @@ Page({
   },
 
   _getValidUserGalleries() {
-    const storedList = wx.getStorageSync(USER_CACHE_KEY);
-    if (!Array.isArray(storedList) || storedList.length === 0) return [];
+    let storedList = [];
+    try {
+      const cache = wx.getStorageSync(USER_CACHE_KEY);
+      storedList = Array.isArray(cache) ? cache : [];
+    } catch (err) {
+      console.error('[分色展厅] 用户作品缓存读取失败:', err);
+      return [];
+    }
+    if (storedList.length === 0) return [];
 
     const validList = storedList.filter((record) => {
       return record && Array.isArray(record.layers) && record.layers.length > 0 && this._areLayerFilesValid(record.layers);
-    }).slice(0, MAX_USER_RECORDS).map((record) => ({
+    }).sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0)).slice(0, MAX_USER_RECORDS).map((record) => ({
       id: record.id,
       title: record.title,
       isPreset: false,
@@ -382,7 +391,11 @@ Page({
     }));
 
     if (validList.length > 0) {
-      wx.setStorageSync(USER_CACHE_KEY, validList);
+      try {
+        wx.setStorageSync(USER_CACHE_KEY, validList);
+      } catch (err) {
+        console.error('[分色展厅] 用户作品缓存保存失败:', err);
+      }
     } else {
       wx.removeStorageSync(USER_CACHE_KEY);
     }
