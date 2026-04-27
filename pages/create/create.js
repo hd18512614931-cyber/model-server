@@ -1,103 +1,168 @@
-import api from '../../utils/api';
+const app = getApp();
+const API_URL = 'https://model-server-rosy.vercel.app/api/split-colors';
+const USER_CACHE_KEY = 'userColorLayers';
+const MAX_USER_RECORDS = 10;
 
 Page({
   data: {
-    selectedImage: '',
-    selectedStyle: '',
-    isLoading: false,
-    styleList: [
-      { id: 'menshen', name: '传统门神' },
-      { id: 'fulushou', name: '福禄寿' },
-      { id: 'niannianyouyu', name: '年年有余' },
-      { id: 'caishen', name: '财神爷' },
-      { id: 'bixie', name: '镇宅辟邪' }
-    ]
+    previewImage: '',
+    analyzing: false,
+    analyzeText: '正在分析中...'
   },
 
-  // 选择/拍照图片
   chooseImage() {
     wx.chooseMedia({
       count: 1,
       mediaType: ['image'],
       sourceType: ['album', 'camera'],
       success: (res) => {
-        this.setData({
-          selectedImage: res.tempFiles[0].tempFilePath
+        const tempPath = res.tempFiles[0].tempFilePath;
+        this.setData({ previewImage: tempPath });
+      }
+    });
+  },
+
+  async startAnalyze() {
+    if (!this.data.previewImage) return;
+
+    this.setData({ analyzing: true, analyzeText: '正在压缩图片...' });
+
+    try {
+      // 压缩图片
+      const compressedPath = await this._compressImage(this.data.previewImage);
+
+      this.setData({ analyzeText: '正在上传分析...' });
+
+      // 转 base64
+      const fs = wx.getFileSystemManager();
+      const base64 = wx.arrayBufferToBase64(fs.readFileSync(compressedPath));
+      const dataUrl = 'data:image/jpeg;base64,' + base64;
+
+      // 调用分色API
+      this.setData({ analyzeText: '正在AI分色处理...' });
+      const result = await this._requestSplitColors(dataUrl);
+
+      if (!result.layers || result.layers.length === 0) {
+        throw new Error('分色结果为空');
+      }
+
+      this.setData({ analyzeText: '正在保存结果...' });
+
+      // 保存图层到本地文件
+      const timestamp = Date.now();
+      const id = 'user_' + timestamp;
+      const layers = [];
+
+      for (let i = 0; i < result.layers.length; i++) {
+        const layer = result.layers[i];
+        const filePath = wx.env.USER_DATA_PATH + '/user_layer_' + id + '_' + i + '.png';
+        const data = layer.data || layer.base64 || '';
+        const base64Data = data.replace(/^data:image\/\w+;base64,/, '');
+        if (!base64Data) continue;
+
+        fs.writeFileSync(filePath, wx.base64ToArrayBuffer(base64Data), 'binary');
+        layers.push({
+          tempPath: filePath,
+          color: layer.color || '',
+          label: layer.label || ('图层' + (i + 1))
         });
       }
-    });
-  },
 
-  // 选择风格
-  selectStyle(e) {
-    const id = e.currentTarget.dataset.id;
-    this.setData({
-      selectedStyle: this.data.selectedStyle === id ? '' : id
-    });
-  },
+      if (layers.length === 0) throw new Error('图层保存失败');
 
-  // 开始分色
-  startSeparation() {
-    if (!this.data.selectedImage) {
-      wx.showToast({ title: '请先选择图片', icon: 'none' });
-      return;
-    }
-
-    this.setData({ isLoading: true });
-
-    const fs = wx.getFileSystemManager();
-    // 1. 将图片转为base64
-    fs.readFile({
-      filePath: this.data.selectedImage,
-      encoding: 'base64',
-      success: async (res) => {
+      // 保存原图到本地（用于展厅卡片缩略图）
+      const originalSavePath = wx.env.USER_DATA_PATH + '/original_' + id + '.jpg';
+      try {
+        fs.saveFileSync(this.data.previewImage, originalSavePath);
+      } catch(e) {
+        // 如果 saveFile 失败，尝试 copyFile
         try {
-          const base64Image = res.data;
-          
-          // 2. 调用后端API POST /api/v1/separate
-          const result = await api.separateImage(base64Image, this.data.selectedStyle);
-          
-          if (result && result.layers) {
-            // 3. 将返回的图层数据存储后传递给图层页
-            wx.setStorageSync('currentLayers', result.layers);
-            wx.switchTab({
-              url: '/pages/layers/layers'
-            });
-          } else {
-            this.handleErrorFallback();
-          }
-        } catch (error) {
-          console.error('分色API调用失败', error);
-          this.handleErrorFallback();
-        } finally {
-          this.setData({ isLoading: false });
+          fs.copyFileSync(this.data.previewImage, originalSavePath);
+        } catch(e2) {
+          console.error('保存原图失败:', e2);
         }
-      },
-      fail: (err) => {
-        console.error('读取图片失败', err);
-        wx.showToast({ title: '读取图片失败', icon: 'none' });
-        this.setData({ isLoading: false });
       }
+
+      // 存入用户分色历史
+      let userList = [];
+      try {
+        const stored = wx.getStorageSync(USER_CACHE_KEY);
+        userList = Array.isArray(stored) ? stored : [];
+      } catch(e) {}
+
+      userList.unshift({
+        id: id,
+        title: '我的年画 · ' + new Date().toLocaleDateString(),
+        isPreset: false,
+        layers: layers,
+        originalImage: originalSavePath,
+        timestamp: timestamp
+      });
+
+      wx.setStorageSync(USER_CACHE_KEY, userList.slice(0, MAX_USER_RECORDS));
+
+      this.setData({ analyzing: false, previewImage: '' });
+
+      wx.showModal({
+        title: '分色完成！',
+        content: '已保存到2D分色展厅',
+        confirmText: '去查看',
+        cancelText: '继续上传',
+        success: (res) => {
+          if (res.confirm) {
+            wx.navigateTo({ url: '/pages/exploded-view/exploded-view' });
+          }
+        }
+      });
+
+    } catch (err) {
+      console.error('[分色] 错误:', err);
+      this.setData({ analyzing: false });
+      wx.showModal({
+        title: '分色失败',
+        content: err.message || '请重试',
+        showCancel: false
+      });
+    }
+  },
+
+  goToExplodedView() {
+    wx.navigateTo({
+      url: '/pages/exploded-view/exploded-view'
     });
   },
 
-  // 错误处理与模拟数据fallback
-  handleErrorFallback() {
-    wx.showToast({ title: '后台接口未通，使用模拟数据', icon: 'none', duration: 2000 });
-    setTimeout(() => {
-      const mockLayers = [
-        { id: 1, name: "线稿层", color: "#000000", order: 5, url: "https://via.placeholder.com/300x400/FFFFFF/000000?text=Line", active: true },
-        { id: 2, name: "红色层", color: "#D9281C", order: 4, url: "https://via.placeholder.com/300x400/FFFFFF/D9281C?text=Red", active: true },
-        { id: 3, name: "黄色层", color: "#C8A063", order: 3, url: "https://via.placeholder.com/300x400/FFFFFF/C8A063?text=Yellow", active: true },
-        { id: 4, name: "绿色层", color: "#4A7A59", order: 2, url: "https://via.placeholder.com/300x400/FFFFFF/4A7A59?text=Green", active: true },
-        { id: 5, name: "底色层", color: "#F5E6D3", order: 1, url: "https://via.placeholder.com/300x400/F5E6D3/F5E6D3?text=Base", active: true }
-      ];
-      wx.setStorageSync('currentLayers', mockLayers);
-      wx.switchTab({
-        url: '/pages/layers/layers'
-      }).catch(() => {
-        wx.navigateTo({ url: '/pages/layers/layers' });
+  _compressImage(src) {
+    return new Promise((resolve, reject) => {
+      wx.compressImage({
+        src: src,
+        quality: 50,
+        success: (res) => resolve(res.tempFilePath),
+        fail: () => resolve(src) // 压缩失败就用原图
       });
-    }, 2000);
+    });
+  },
+
+  _requestSplitColors(imageBase64) {
+    return new Promise((resolve, reject) => {
+      wx.request({
+        url: API_URL,
+        method: 'POST',
+        header: { 'Content-Type': 'application/json' },
+        data: {
+          imageBase64: imageBase64,
+          imageUrl: imageBase64
+        },
+        timeout: 120000,
+        success: (res) => {
+          if (res.statusCode >= 200 && res.statusCode < 300 && res.data && res.data.success) {
+            resolve(res.data);
+          } else {
+            reject(new Error((res.data && res.data.error) || '分色请求失败'));
+          }
+        },
+        fail: (err) => reject(new Error(err.errMsg || '网络请求失败'))
+      });
+    });
   }
 });

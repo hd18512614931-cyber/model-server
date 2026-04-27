@@ -1,40 +1,37 @@
-<view class="container">
-  <view class="header">
-    <text class="title">创作你的年画</text>
-    <text class="subtitle">上传图片，AI为您生成传统年画分色图层</text>
+<view class="create-page">
+  <view class="create-header">
+    <text class="create-title">AI 色彩分析</text>
+    <text class="create-subtitle">上传年画图片，AI自动分解五色套印层</text>
   </view>
 
-  <!-- 图片上传预览区 -->
-  <view class="upload-section">
-    <view class="upload-area" bindtap="chooseImage" wx:if="{{!selectedImage}}">
-      <view class="upload-icon">+</view>
-      <text class="upload-text">点击上传图片 或 拍照</text>
-    </view>
-    <view class="preview-area" wx:else>
-      <image src="{{selectedImage}}" mode="aspectFit" class="preview-img"></image>
-      <view class="reselect-btn" bindtap="chooseImage">重新选择</view>
-    </view>
+  <!-- 上传区域 -->
+  <view class="upload-area" bindtap="chooseImage" wx:if="{{!previewImage}}">
+    <view class="upload-icon"></view>
+    <text class="upload-text">点击上传年画图片</text>
+    <text class="upload-hint">支持拍照或从相册选择</text>
   </view>
 
-  <!-- 风格选择区 -->
-  <view class="style-section">
-    <view class="section-title">选择风格类型（可选）</view>
-    <scroll-view class="style-scroll" scroll-x="true">
-      <view class="style-list">
-        <block wx:for="{{styleList}}" wx:key="id">
-          <view class="style-item {{selectedStyle === item.id ? 'active' : ''}}" 
-                bindtap="selectStyle" data-id="{{item.id}}">
-            {{item.name}}
-          </view>
-        </block>
+  <!-- 预览区域 -->
+  <view class="preview-area" wx:if="{{previewImage}}">
+    <image class="preview-img" src="{{previewImage}}" mode="aspectFit" />
+    <view class="preview-actions">
+      <view class="action-btn action-reselect" bindtap="chooseImage">
+        <text>重新选择</text>
       </view>
-    </scroll-view>
+      <view class="action-btn action-analyze" bindtap="startAnalyze" wx:if="{{!analyzing}}">
+        <text>开始分色分析</text>
+      </view>
+      <view class="action-btn action-analyzing" wx:if="{{analyzing}}">
+        <view class="mini-loading"></view>
+        <text>{{analyzeText}}</text>
+      </view>
+    </view>
   </view>
 
-  <!-- 底部操作按钮 -->
-  <view class="footer-btn">
-    <button class="submit-btn" loading="{{isLoading}}" disabled="{{!selectedImage || isLoading}}" bindtap="startSeparation">
-      {{isLoading ? 'AI分色中...' : '开始分色'}}
-    </button>
+  <!-- 历史记录入口 -->
+  <view class="history-entry" bindtap="goToExplodedView">
+    <text class="history-icon"></text>
+    <text class="history-text">查看 2D 分色展厅</text>
+    <text class="history-arrow">→</text>
   </view>
 </view>
