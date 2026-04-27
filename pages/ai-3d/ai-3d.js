@@ -85,17 +85,22 @@ Page({
 
     } catch (err) {
       console.error('[AI-3D] 错误:', err)
-      wx.showToast({ title: err.message || '生成失败', icon: 'none' })
+      wx.showModal({
+        title: '生成失败',
+        content: err.message || '未知错误，请重试',
+        showCancel: false
+      })
     } finally {
       this.setData({ loading: false, loadingText: '' })
     }
   },
 
-  // 每5秒查一次，最多60次（5分钟）
+  // 每10秒查一次，最多90次（15分钟）
   _pollTaskStatus(taskId, serverBase) {
     return new Promise((resolve, reject) => {
       let attempts = 0
-      const maxAttempts = 60
+      const maxAttempts = 90
+      const pollInterval = 10000
 
       const poll = () => {
         attempts++
@@ -105,8 +110,17 @@ Page({
           return
         }
 
+        let loadingText = '正在生成3D模型...'
+        if (attempts > 60) {
+          loadingText = '即将完成，请再等等...'
+        } else if (attempts >= 40) {
+          loadingText = '模型较复杂，还需要一点时间...'
+        } else if (attempts >= 20) {
+          loadingText = 'AI正在努力生成中，请耐心等待...'
+        }
+
         this.setData({
-          loadingText: 'AI 正在生成中... (' + (attempts * 5) + '秒)'
+          loadingText: loadingText
         })
 
         wx.request({
@@ -130,13 +144,23 @@ Page({
                 reject(new Error('生成完成但模型URL解析失败，请查看控制台日志'))
               }
             } else if (data.status === 'failed') {
-              reject(new Error(data.error || 'AI 生成失败'))
+              let errorMsg = 'AI 生成失败'
+              if (data.error) {
+                if (typeof data.error === 'string') {
+                  errorMsg = data.error
+                } else if (data.error.message) {
+                  errorMsg = data.error.message
+                } else {
+                  errorMsg = JSON.stringify(data.error)
+                }
+              }
+              reject(new Error(errorMsg))
             } else {
-              setTimeout(poll, 5000)
+              setTimeout(poll, pollInterval)
             }
           },
           fail: () => {
-            setTimeout(poll, 5000)
+            setTimeout(poll, pollInterval)
           }
         })
       }
