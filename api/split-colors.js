@@ -33,18 +33,57 @@ module.exports = async (req, res) => {
 
     const mainColors = detectMainColors(rawPixels, width, height);
 
+    if (mainColors.length < 2) {
+      return res.status(400).json({
+        success: false,
+        error: '图片颜色太少，无法进行有效分色。请选择色彩更丰富的图片。'
+      });
+    }
+
+    if (mainColors.length > 12) {
+      return res.status(400).json({
+        success: false,
+        error: '图片颜色过于复杂（检测到' + mainColors.length + '种主色），不适合进行传统套印分色。请选择色块分明的图片。'
+      });
+    }
+
+    const pixelAssignment = new Int8Array(width * height).fill(-1);
+
+    for (let i = 0; i < width * height; i++) {
+      const offset = i * 4;
+      const r = rawPixels[offset], g = rawPixels[offset + 1], b = rawPixels[offset + 2], a = rawPixels[offset + 3];
+      if (a <= 10 || isNearWhite(r, g, b)) continue;
+
+      let minDist = Infinity;
+      let bestLayer = -1;
+
+      for (let j = 0; j < mainColors.length; j++) {
+        const dist = Math.pow(r - mainColors[j].r, 2) +
+                     Math.pow(g - mainColors[j].g, 2) +
+                     Math.pow(b - mainColors[j].b, 2);
+        if (dist < minDist) {
+          minDist = dist;
+          bestLayer = j;
+        }
+      }
+
+      if (bestLayer >= 0) {
+        pixelAssignment[i] = bestLayer;
+      }
+    }
+
     const results = [];
     for (let layerIndex = 0; layerIndex < mainColors.length; layerIndex++) {
       const mainColor = mainColors[layerIndex];
       const layerPixels = Buffer.alloc(width * height * 4);
       let pixelCount = 0;
+
       for (let i = 0; i < width * height; i++) {
-        const offset = i * 4;
-        const r = rawPixels[offset], g = rawPixels[offset + 1], b = rawPixels[offset + 2], a = rawPixels[offset + 3];
-        if (a > 10 && getQuantizedKey(r, g, b) === mainColor.key) {
-          layerPixels[offset] = r;
-          layerPixels[offset + 1] = g;
-          layerPixels[offset + 2] = b;
+        if (pixelAssignment[i] === layerIndex) {
+          const offset = i * 4;
+          layerPixels[offset] = rawPixels[offset];
+          layerPixels[offset + 1] = rawPixels[offset + 1];
+          layerPixels[offset + 2] = rawPixels[offset + 2];
           layerPixels[offset + 3] = 255;
           pixelCount++;
         }
@@ -68,7 +107,7 @@ module.exports = async (req, res) => {
 
 function detectMainColors(rawPixels, width, height) {
   const totalPixels = width * height;
-  const minPixelCount = Math.max(1, Math.floor(totalPixels * 0.01));
+  const minPixelCount = Math.max(1, Math.floor(totalPixels * 0.008));
   const colorMap = new Map();
 
   for (let i = 0; i < totalPixels; i++) {
@@ -94,20 +133,47 @@ function detectMainColors(rawPixels, width, height) {
 
   const sortedColors = Array.from(colorMap.values()).sort((a, b) => b.count - a.count);
   const filteredColors = sortedColors.filter((color) => color.count >= minPixelCount);
-  const candidates = filteredColors.length >= 2 ? filteredColors : sortedColors.slice(0, 2);
-  return candidates.slice(0, 8);
+  const mergedColors = mergeCloseColors(filteredColors);
+
+  mergedColors.sort((a, b) => b.count - a.count);
+
+  return mergedColors;
 }
 
 function quantizeColor(r, g, b) {
+  const step = 48;
   return [
-    Math.floor(r / 32) * 32,
-    Math.floor(g / 32) * 32,
-    Math.floor(b / 32) * 32
+    Math.floor(r / step) * step + Math.floor(step / 2),
+    Math.floor(g / step) * step + Math.floor(step / 2),
+    Math.floor(b / step) * step + Math.floor(step / 2)
   ];
 }
 
-function getQuantizedKey(r, g, b) {
-  return quantizeColor(r, g, b).join(',');
+function mergeCloseColors(colors) {
+  const merged = [];
+  const used = new Set();
+
+  for (let i = 0; i < colors.length; i++) {
+    if (used.has(i)) continue;
+    let current = { ...colors[i] };
+
+    for (let j = i + 1; j < colors.length; j++) {
+      if (used.has(j)) continue;
+      const dist = Math.sqrt(
+        Math.pow(current.r - colors[j].r, 2) +
+        Math.pow(current.g - colors[j].g, 2) +
+        Math.pow(current.b - colors[j].b, 2)
+      );
+      if (dist < 60) {
+        current.count += colors[j].count;
+        used.add(j);
+      }
+    }
+
+    merged.push(current);
+  }
+
+  return merged;
 }
 
 function isNearWhite(r, g, b) {
