@@ -9,6 +9,7 @@ module.exports = async (req, res) => {
 
   try {
     const { imageUrl } = req.body;
+    const removeBackground = req.body.removeBackground !== false;
     if (!imageUrl) return res.status(400).json({ error: '缺少 imageUrl' });
 
     let imageBuffer;
@@ -25,6 +26,10 @@ module.exports = async (req, res) => {
     const metadata = await image.metadata();
     const { width, height } = metadata;
     const rawPixels = await image.ensureAlpha().raw().toBuffer();
+
+    if (removeBackground) {
+      removeConnectedBackground(rawPixels, width, height);
+    }
 
     const mainColors = detectMainColors(rawPixels, width, height);
 
@@ -120,6 +125,49 @@ function getColorLabel(r, g, b, index) {
   if (h >= 30 && h < 80 && s > 0.2) return '黄版';
   if (h >= 80 && h <= 180 && s > 0.18) return '绿版';
   return '色版' + (index + 1);
+}
+
+function removeConnectedBackground(rawPixels, width, height) {
+  const pixelCount = width * height;
+  const visited = new Uint8Array(pixelCount);
+  const queue = new Uint32Array(pixelCount);
+  let head = 0;
+  let tail = 0;
+
+  const enqueue = (x, y) => {
+    if (x < 0 || x >= width || y < 0 || y >= height) return;
+    const index = y * width + x;
+    if (visited[index] || !isBackgroundPixel(rawPixels, index)) return;
+    visited[index] = 1;
+    queue[tail++] = index;
+  };
+
+  enqueue(0, 0);
+  enqueue(width - 1, 0);
+  enqueue(0, height - 1);
+  enqueue(width - 1, height - 1);
+
+  while (head < tail) {
+    const index = queue[head++];
+    rawPixels[index * 4 + 3] = 0;
+
+    const x = index % width;
+    const y = Math.floor(index / width);
+    enqueue(x + 1, y);
+    enqueue(x - 1, y);
+    enqueue(x, y + 1);
+    enqueue(x, y - 1);
+  }
+}
+
+function isBackgroundPixel(rawPixels, index) {
+  const offset = index * 4;
+  const r = rawPixels[offset], g = rawPixels[offset + 1], b = rawPixels[offset + 2], a = rawPixels[offset + 3];
+  if (a <= 10) return true;
+
+  const brightness = (r + g + b) / 3;
+  const saturation = (Math.max(r, g, b) - Math.min(r, g, b)) / 255;
+  return brightness > 200 && saturation < 0.2;
 }
 
 function rgbToHsl(r, g, b) {
