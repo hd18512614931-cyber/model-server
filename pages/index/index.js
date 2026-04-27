@@ -1,19 +1,28 @@
 const app = getApp();
 const LAYER_BASE_URL = 'https://model-server-rosy.vercel.app/layers';
+const HOME_LAYER_CACHE_KEY = 'homeLayersLogoDemoV1';
 const HOME_LAYER_URLS = [
-  LAYER_BASE_URL + '/nianhua-demo/layer_4.png',
-  LAYER_BASE_URL + '/nianhua-demo/layer_3.png',
-  LAYER_BASE_URL + '/nianhua-demo/layer_2.png',
-  LAYER_BASE_URL + '/nianhua-demo/layer_1.png',
-  LAYER_BASE_URL + '/nianhua-demo/layer_0.png'
+  LAYER_BASE_URL + '/logo-demo/layer_8.png',
+  LAYER_BASE_URL + '/logo-demo/layer_7.png',
+  LAYER_BASE_URL + '/logo-demo/layer_6.png',
+  LAYER_BASE_URL + '/logo-demo/layer_5.png',
+  LAYER_BASE_URL + '/logo-demo/layer_4.png',
+  LAYER_BASE_URL + '/logo-demo/layer_3.png',
+  LAYER_BASE_URL + '/logo-demo/layer_2.png',
+  LAYER_BASE_URL + '/logo-demo/layer_1.png',
+  LAYER_BASE_URL + '/logo-demo/layer_0.png'
 ];
 
 function buildHomeLayers(paths) {
+  const total = paths.length;
+  const totalDepth = total <= 5 ? 240 : Math.min(420, (total - 1) * 45);
+  const spacing = total <= 1 ? 0 : totalDepth / (total - 1);
+
   return paths.map((url, index) => ({
     id: index + 1,
     name: '图层' + (index + 1),
     url,
-    zDist: -120 + index * 60,
+    zDist: Math.round(-totalDepth / 2 + index * spacing),
     order: index + 1
   }));
 }
@@ -48,8 +57,8 @@ Page({
   },
 
   async _prepareHomeLayers() {
-    const cachedLayers = wx.getStorageSync('homeLayers');
-    if (Array.isArray(cachedLayers) && cachedLayers.length === 5 && this._areHomeLayersValid(cachedLayers)) {
+    const cachedLayers = wx.getStorageSync(HOME_LAYER_CACHE_KEY);
+    if (Array.isArray(cachedLayers) && cachedLayers.length === HOME_LAYER_URLS.length && this._areHomeLayersValid(cachedLayers)) {
       this.setData({
         layers: buildHomeLayers(cachedLayers.map((layer) => layer.localPath)),
         layersLoading: false,
@@ -71,7 +80,7 @@ Page({
     }
 
     if (downloadedLayers.length === HOME_LAYER_URLS.length) {
-      wx.setStorageSync('homeLayers', downloadedLayers);
+      wx.setStorageSync(HOME_LAYER_CACHE_KEY, downloadedLayers);
       this.setData({
         layers: buildHomeLayers(downloadedLayers.map((layer) => layer.localPath)),
         layersLoading: false,
@@ -80,7 +89,7 @@ Page({
       return;
     }
 
-    wx.removeStorageSync('homeLayers');
+    wx.removeStorageSync(HOME_LAYER_CACHE_KEY);
     this.setData({
       layers: buildHomeLayers(HOME_LAYER_URLS),
       layersLoading: false,
@@ -116,7 +125,7 @@ Page({
           }
 
           const fs = wx.getFileSystemManager();
-          const savePath = `${wx.env.USER_DATA_PATH}/home_layer_${index}.png`;
+          const savePath = `${wx.env.USER_DATA_PATH}/home_logo_demo_layer_${index}.png`;
           try {
             fs.unlinkSync(savePath);
           } catch (err) {}
