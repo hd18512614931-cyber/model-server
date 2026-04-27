@@ -26,14 +26,6 @@ const PRESET_LAYER_META = [
   { color: '#e6a817', label: '橙黄' },
   { color: '#e8b4a2', label: '肉粉' }
 ];
-const EXPLODED_TRANSFORMS = [
-  'translateZ(200px) translateY(-80px)',
-  'translateZ(100px) translateY(-40px)',
-  'translateZ(0px)',
-  'translateZ(-100px) translateY(40px)',
-  'translateZ(-200px) translateY(80px)'
-];
-
 Page({
   data: {
     loading: false,
@@ -483,8 +475,26 @@ Page({
   },
 
   _getLayerStyle(index, isExploded) {
-    const transform = isExploded ? EXPLODED_TRANSFORMS[index] || 'translateZ(0px)' : 'translateZ(0px) translateY(0px)';
-    return `transform: ${transform}; z-index: ${10 - index};`;
+    if (!isExploded) {
+      return 'transform: translateZ(0px) translateY(0px); z-index: ' + (10 - index) + ';';
+    }
+
+    const totalLayers = this.data.layers.length || 1;
+    const maxZ = 200;
+    const maxY = 80;
+
+    let zOffset, yOffset;
+    if (totalLayers === 1) {
+      zOffset = 0;
+      yOffset = 0;
+    } else {
+      const ratio = index / (totalLayers - 1);
+      zOffset = maxZ - ratio * maxZ * 2;
+      yOffset = -maxY + ratio * maxY * 2;
+    }
+
+    const transform = 'translateZ(' + Math.round(zOffset) + 'px) translateY(' + Math.round(yOffset) + 'px)';
+    return 'transform: ' + transform + '; z-index: ' + (10 - index) + ';';
   },
 
   _getTouchDistance(touchA, touchB) {
