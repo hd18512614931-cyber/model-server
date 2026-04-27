@@ -151,7 +151,8 @@ Page({
         header: { 'Content-Type': 'application/json' },
         data: {
           imageBase64: imageBase64,
-          imageUrl: imageBase64
+          imageUrl: imageBase64,
+          removeBackground: false
         },
         timeout: 120000,
         success: (res) => {
