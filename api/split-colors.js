@@ -141,12 +141,17 @@ function detectMainColors(rawPixels, width, height) {
 }
 
 function quantizeColor(r, g, b) {
-  const step = 48;
-  return [
-    Math.floor(r / step) * step + Math.floor(step / 2),
-    Math.floor(g / step) * step + Math.floor(step / 2),
-    Math.floor(b / step) * step + Math.floor(step / 2)
-  ];
+  const [h, s, l] = rgbToHsl(r, g, b);
+
+  if (s < 0.15) {
+    return [Math.round(l * 255), Math.round(l * 255), Math.round(l * 255)];
+  }
+
+  const hBucket = Math.floor(h / 30) * 30 + 15;
+  const sBucket = s < 0.5 ? 0.35 : 0.75;
+  const lBucket = l < 0.33 ? 0.2 : (l < 0.66 ? 0.5 : 0.8);
+
+  return hslToRgb(hBucket, sBucket, lBucket);
 }
 
 function mergeCloseColors(colors) {
@@ -159,12 +164,8 @@ function mergeCloseColors(colors) {
 
     for (let j = i + 1; j < colors.length; j++) {
       if (used.has(j)) continue;
-      const dist = Math.sqrt(
-        Math.pow(current.r - colors[j].r, 2) +
-        Math.pow(current.g - colors[j].g, 2) +
-        Math.pow(current.b - colors[j].b, 2)
-      );
-      if (dist < 60) {
+
+      if (shouldMerge(current, colors[j])) {
         current.count += colors[j].count;
         used.add(j);
       }
@@ -174,6 +175,53 @@ function mergeCloseColors(colors) {
   }
 
   return merged;
+}
+
+function shouldMerge(colorA, colorB) {
+  const [hA, sA, lA] = rgbToHsl(colorA.r, colorA.g, colorA.b);
+  const [hB, sB, lB] = rgbToHsl(colorB.r, colorB.g, colorB.b);
+
+  if (sA < 0.15 && sB < 0.15) {
+    return Math.abs(lA - lB) < 0.2;
+  }
+
+  if ((sA < 0.15) !== (sB < 0.15)) {
+    return false;
+  }
+
+  let hDiff = Math.abs(hA - hB);
+  if (hDiff > 180) hDiff = 360 - hDiff;
+
+  if (hDiff > 25) return false;
+
+  if (Math.abs(lA - lB) > 0.25) return false;
+
+  if (Math.abs(sA - sB) > 0.35) return false;
+
+  return true;
+}
+
+function hslToRgb(h, s, l) {
+  h = h / 360;
+  let r, g, b;
+  if (s === 0) {
+    r = g = b = l;
+  } else {
+    const hue2rgb = (p, q, t) => {
+      if (t < 0) t += 1;
+      if (t > 1) t -= 1;
+      if (t < 1/6) return p + (q - p) * 6 * t;
+      if (t < 1/2) return q;
+      if (t < 2/3) return p + (q - p) * (2/3 - t) * 6;
+      return p;
+    };
+    const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+    const p = 2 * l - q;
+    r = hue2rgb(p, q, h + 1/3);
+    g = hue2rgb(p, q, h);
+    b = hue2rgb(p, q, h - 1/3);
+  }
+  return [Math.round(r * 255), Math.round(g * 255), Math.round(b * 255)];
 }
 
 function isNearWhite(r, g, b) {
