@@ -18,10 +18,13 @@
   </view>
 
   <view class="nav-dots">
-    <view class="dot {{currentPage===0?'active':''}}" bindtap="goToPage" data-page="0"></view>
-    <view class="dot {{currentPage===1?'active':''}}" bindtap="goToPage" data-page="1"></view>
-    <view class="dot {{currentPage===2?'active':''}}" bindtap="goToPage" data-page="2"></view>
-    <view class="dot {{currentPage===3?'active':''}}" bindtap="goToPage" data-page="3"></view>
+    <view
+      wx:for="{{9}}"
+      wx:key="index"
+      class="dot {{currentPage===index?'active':''}}"
+      bindtap="goToPage"
+      data-page="{{index}}"
+    ></view>
   </view>
 
   <swiper
@@ -96,6 +99,152 @@
     </swiper-item>
 
     <swiper-item>
+      <view class="screen screen-color">
+        <text class="screen-label">工 艺</text>
+        <text class="screen-heading">五色套印</text>
+
+        <view class="color-row">
+          <view
+            wx:for="{{colors}}"
+            wx:key="index"
+            class="color-circle {{activeColor === index ? 'color-active' : ''}} {{animatingIndex === index ? 'color-animating' : ''}}"
+            style="background:{{item.color}};"
+            data-index="{{index}}"
+            bindtap="selectColor"
+          >
+            <text class="color-order" style="color:{{item.textColor}};">{{item.order}}</text>
+          </view>
+        </view>
+
+        <view class="anim-btn {{isAnimating?'anim-btn-disabled':''}}" bindtap="playColorSequence">
+          <text>{{isAnimating ? '演示中…' : '▶ 演示套印顺序'}}</text>
+        </view>
+
+        <text
+          wx:if="{{isAnimating && animatingIndex >= 0 && animatingIndex < colors.length}}"
+          class="step-text"
+        >第{{colors[animatingIndex].order}}步 · 印{{colors[animatingIndex].name}}</text>
+
+        <view wx:if="{{activeColor >= 0}}" class="color-info">
+          <text class="color-info-name" style="color:{{colors[activeColor].color}};">
+            {{colors[activeColor].name}}
+          </text>
+          <text class="color-info-line">颜料：{{colors[activeColor].material}}</text>
+          <text class="color-info-line">寓意：{{colors[activeColor].meaning}}</text>
+          <text class="color-info-line">顺序：第 {{colors[activeColor].order}} 版</text>
+          <text class="color-info-desc">{{colors[activeColor].desc}}</text>
+        </view>
+      </view>
+    </swiper-item>
+
+    <swiper-item>
+      <view class="screen screen-cards">
+        <text class="screen-label">图 鉴</text>
+        <text class="screen-heading">年画图鉴</text>
+        <text class="screen-hint">点击卡片翻转探索</text>
+
+        <view class="cards-grid">
+          <view
+            wx:for="{{cards}}"
+            wx:key="index"
+            class="flip-container"
+            data-index="{{index}}"
+            bindtap="flipCard"
+          >
+            <view class="flip-inner {{item.flipped ? 'flipped' : ''}}">
+              <view class="flip-front">
+                <image src="{{baseUrl}}{{item.image}}" mode="aspectFill" class="flip-img" lazy-load></image>
+                <text class="flip-name">{{item.title}}</text>
+              </view>
+              <view class="flip-back">
+                <text class="flip-back-cat">{{item.category}}</text>
+                <text class="flip-back-title">{{item.title}}</text>
+                <text class="flip-back-desc">{{item.desc}}</text>
+              </view>
+            </view>
+          </view>
+        </view>
+      </view>
+    </swiper-item>
+
+    <swiper-item>
+      <view class="screen screen-quiz">
+        <text class="screen-label">测 验</text>
+        <text class="screen-heading">考考你</text>
+
+        <block wx:if="{{!quizFinished}}">
+          <text class="quiz-progress">{{currentQuestion + 1}} / {{quiz.length}}</text>
+          <text class="quiz-question">{{quiz[currentQuestion].question}}</text>
+
+          <view class="quiz-options">
+            <view
+              wx:for="{{quiz[currentQuestion].options}}"
+              wx:key="index"
+              wx:for-item="option"
+              class="quiz-opt {{showExplanation && index === quiz[currentQuestion].answer ? 'quiz-correct' : ''}} {{showExplanation && index === selectedOption && index !== quiz[currentQuestion].answer ? 'quiz-wrong' : ''}}"
+              data-index="{{index}}"
+              bindtap="selectQuizOption"
+            >
+              <text>{{option}}</text>
+            </view>
+          </view>
+
+          <view wx:if="{{showExplanation}}" class="quiz-explain">
+            <text>{{quiz[currentQuestion].explanation}}</text>
+          </view>
+        </block>
+
+        <block wx:if="{{quizFinished}}">
+          <view class="quiz-result">
+            <text class="quiz-score-num">{{quizScore}}/{{quiz.length}}</text>
+            <text wx:if="{{quizScore === 3}}" class="quiz-msg">年画大师！了如指掌。</text>
+            <text wx:elif="{{quizScore === 2}}" class="quiz-msg">不错，已有不少了解。</text>
+            <text wx:elif="{{quizScore === 1}}" class="quiz-msg">继续探索，精彩无限。</text>
+            <text wx:else class="quiz-msg">没关系，往回滑看看知识点。</text>
+            <view class="quiz-reset" bindtap="resetQuiz">
+              <text>重新答题</text>
+            </view>
+          </view>
+        </block>
+      </view>
+    </swiper-item>
+
+    <swiper-item>
+      <view class="screen screen-video">
+        <text class="screen-label">影 像</text>
+        <text class="screen-heading">记录与传承</text>
+
+        <view class="video-list">
+          <view class="video-item">
+            <text class="video-item-title">木版年画制作工艺</text>
+            <video
+              class="video-player"
+              src="https://model-server-rosy.vercel.app/knowledge/nianhua-making.mp4"
+              poster="https://model-server-rosy.vercel.app/knowledge/coloring-closeup.jpg"
+              controls
+              enable-play-gesture
+              show-center-play-btn
+              object-fit="contain"
+            ></video>
+          </view>
+
+          <view class="video-item">
+            <text class="video-item-title">年画故事与传承</text>
+            <video
+              class="video-player"
+              src="https://model-server-rosy.vercel.app/knowledge/nianhua-story.mp4"
+              poster="https://model-server-rosy.vercel.app/knowledge/baxian.jpg"
+              controls
+              enable-play-gesture
+              show-center-play-btn
+              object-fit="contain"
+            ></video>
+          </view>
+        </view>
+      </view>
+    </swiper-item>
+
+    <swiper-item>
       <view class="screen screen-3">
         <view class="s3-header">
           <text class="section-label">展 厅</text>
@@ -138,6 +287,30 @@
         <view class="s4-footer">
           <text class="footer-text">佛山木版年画 · 数字体验</text>
           <text class="footer-text">2025</text>
+        </view>
+      </view>
+    </swiper-item>
+
+    <swiper-item>
+      <view class="screen screen-team">
+        <text class="screen-label">关 于</text>
+        <text class="screen-heading">年画薪传突击队</text>
+
+        <view class="team-divider"></view>
+
+        <text class="team-desc">
+          我们是一群热爱传统文化的大学生，
+          用数字技术让非遗走进年轻人的世界。
+        </text>
+
+        <view class="team-info">
+          <text class="team-line">广东工业大学 · 数据科学专业</text>
+          <text class="team-line">2025 毕业设计作品</text>
+        </view>
+
+        <view class="team-footer">
+          <text class="team-footer-text">佛山木版年画 · 数字体验</text>
+          <text class="team-footer-year">2025</text>
         </view>
       </view>
     </swiper-item>

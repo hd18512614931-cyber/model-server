@@ -52,6 +52,7 @@ const ERA_DATA = [
 
 Page({
   data: {
+    baseUrl: BASE_URL,
     currentPage: 0,
     musicPlaying: false,
     musicTriggered: false,
@@ -64,7 +65,92 @@ Page({
       BASE_URL + 'woodblock-and-print.jpg',
       BASE_URL + 'drying-prints.jpg',
       BASE_URL + 'coloring-closeup.jpg'
-    ]
+    ],
+    colors: [
+      {
+        name: '黑', color: '#1a1a1a', textColor: '#fff', order: 1,
+        material: '松烟墨', meaning: '轮廓骨架',
+        desc: '黑色墨线版最先印刷，勾勒出年画的骨架轮廓，是整幅画的基础。'
+      },
+      {
+        name: '红', color: '#D42F2F', textColor: '#fff', order: 2,
+        material: '红丹（铅丹）', meaning: '喜庆吉祥',
+        desc: '佛山年画标志性的"万年红"，用红丹作底，经久不褪，是佛山年画区别于其他产地的重要特征。'
+      },
+      {
+        name: '黄', color: '#F2C94C', textColor: '#000', order: 3,
+        material: '石黄/藤黄', meaning: '富贵尊荣',
+        desc: '黄色多用于人物服饰、器物装饰，增添华贵之感。'
+      },
+      {
+        name: '绿', color: '#2D8B46', textColor: '#fff', order: 4,
+        material: '石绿', meaning: '生机盎然',
+        desc: '绿色用于树木花草、部分服饰，为画面增添生气。'
+      },
+      {
+        name: '蓝', color: '#2D5DA1', textColor: '#fff', order: 5,
+        material: '靛蓝', meaning: '沉稳庄重',
+        desc: '蓝色多用于天空、水面、深色服饰，使画面层次更加丰富。'
+      }
+    ],
+    activeColor: -1,
+    isAnimating: false,
+    animatingIndex: -1,
+    cards: [
+      {
+        title: '门神·秦叔宝',
+        category: '门神类',
+        image: 'swordsman-woodblock.jpg',
+        desc: '手持双锏的秦琼，与尉迟恭成对张贴于大门两侧，是佛山年画最经典的题材。',
+        flipped: false
+      },
+      {
+        title: '八仙贺寿',
+        category: '吉庆类',
+        image: 'baxian.jpg',
+        desc: '八位仙人各持法器前来祝寿，寓意福寿绵长、吉祥如意。',
+        flipped: false
+      },
+      {
+        title: '雕版印痕',
+        category: '工艺类',
+        image: 'woodblock-and-print.jpg',
+        desc: '一块梨木雕版可印制数千张年画，刀痕之间藏着匠人数十年的功力。',
+        flipped: false
+      },
+      {
+        title: '晾干成画',
+        category: '工序类',
+        image: 'drying-prints.jpg',
+        desc: '套色完成后，年画需要自然晾干。色彩在空气中慢慢沉淀，最终呈现出浓郁的质感。',
+        flipped: false
+      }
+    ],
+    quiz: [
+      {
+        question: '五色套印最先印哪种颜色？',
+        options: ['红色', '黑色', '黄色', '绿色'],
+        answer: 1,
+        explanation: '黑色墨线版最先印，勾勒轮廓，是画的骨架。'
+      },
+      {
+        question: '入选国家级非遗是哪年？',
+        options: ['2003', '2006', '2008', '2010'],
+        answer: 1,
+        explanation: '2006年入选首批国家级非物质文化遗产名录。'
+      },
+      {
+        question: '雕版最常用什么木材？',
+        options: ['松木', '梨木或枣木', '竹子', '樟木'],
+        answer: 1,
+        explanation: '梨木枣木质硬细腻纹理均匀，最适合精细雕刻。'
+      }
+    ],
+    currentQuestion: 0,
+    quizScore: 0,
+    quizFinished: false,
+    selectedOption: -1,
+    showExplanation: false
   },
 
   onLoad() {
@@ -75,6 +161,8 @@ Page({
   },
 
   onUnload() {
+    this.clearColorSequenceTimer();
+
     if (this.bgMusic) {
       this.bgMusic.destroy();
       this.bgMusic = null;
@@ -131,6 +219,112 @@ Page({
     wx.previewImage({
       current: src,
       urls: urls
+    });
+  },
+
+  selectColor(e) {
+    const index = e.currentTarget.dataset.index;
+
+    if (this.data.isAnimating) {
+      return;
+    }
+
+    this.setData({
+      activeColor: this.data.activeColor === index ? -1 : index
+    });
+  },
+
+  playColorSequence() {
+    if (this.data.isAnimating) {
+      return;
+    }
+
+    this.clearColorSequenceTimer();
+    this.setData({
+      isAnimating: true,
+      animatingIndex: 0,
+      activeColor: -1
+    });
+
+    this.colorSequenceTimer = setInterval(() => {
+      const nextIndex = this.data.animatingIndex + 1;
+
+      if (nextIndex >= this.data.colors.length) {
+        clearInterval(this.colorSequenceTimer);
+        this.colorSequenceTimer = null;
+        this.colorSequenceEndTimer = setTimeout(() => {
+          this.setData({
+            isAnimating: false,
+            animatingIndex: -1
+          });
+          this.colorSequenceEndTimer = null;
+        }, 500);
+        return;
+      }
+
+      this.setData({
+        animatingIndex: nextIndex
+      });
+    }, 1000);
+  },
+
+  clearColorSequenceTimer() {
+    if (this.colorSequenceTimer) {
+      clearInterval(this.colorSequenceTimer);
+      this.colorSequenceTimer = null;
+    }
+
+    if (this.colorSequenceEndTimer) {
+      clearTimeout(this.colorSequenceEndTimer);
+      this.colorSequenceEndTimer = null;
+    }
+  },
+
+  flipCard(e) {
+    const index = e.currentTarget.dataset.index;
+    const path = 'cards[' + index + '].flipped';
+    this.setData({
+      [path]: !this.data.cards[index].flipped
+    });
+  },
+
+  selectQuizOption(e) {
+    if (this.data.showExplanation) {
+      return;
+    }
+
+    const optionIndex = e.currentTarget.dataset.index;
+    const currentQuestion = this.data.currentQuestion;
+    const isCorrect = optionIndex === this.data.quiz[currentQuestion].answer;
+
+    this.setData({
+      selectedOption: optionIndex,
+      showExplanation: true,
+      quizScore: isCorrect ? this.data.quizScore + 1 : this.data.quizScore
+    });
+
+    setTimeout(() => {
+      if (this.data.currentQuestion < this.data.quiz.length - 1) {
+        this.setData({
+          currentQuestion: this.data.currentQuestion + 1,
+          selectedOption: -1,
+          showExplanation: false
+        });
+      } else {
+        this.setData({
+          quizFinished: true
+        });
+      }
+    }, 2000);
+  },
+
+  resetQuiz() {
+    this.setData({
+      currentQuestion: 0,
+      quizScore: 0,
+      quizFinished: false,
+      selectedOption: -1,
+      showExplanation: false
     });
   },
 
