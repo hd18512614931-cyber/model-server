@@ -155,13 +155,13 @@ page {
 .color-dot.active {
   width: 100rpx;
   height: 100rpx;
-  box-shadow: 0 0 24rpx rgba(0, 0, 0, 0.25);
+  box-shadow: 0 0 24rpx rgba(194, 59, 34, 0.35), 0 0 12rpx rgba(0, 0, 0, 0.18);
 }
 
 .color-dot.animating {
   width: 100rpx;
   height: 100rpx;
-  box-shadow: 0 0 30rpx rgba(0, 0, 0, 0.28);
+  box-shadow: 0 0 30rpx rgba(194, 59, 34, 0.38), 0 0 14rpx rgba(0, 0, 0, 0.2);
   animation: pulse 0.8s ease infinite;
 }
 
@@ -431,24 +431,28 @@ page {
   font-size: 26rpx;
 }
 
-.video-placeholder {
+.video-card {
   background: #FFFFFF;
   border-radius: 16rpx;
-  padding: 80rpx 0;
-  text-align: center;
+  padding: 24rpx;
+  margin-bottom: 24rpx;
   box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.08);
+  box-sizing: border-box;
 }
 
-.placeholder-icon {
-  font-size: 64rpx;
+.video-title {
+  font-size: 28rpx;
+  color: #1A1A1A;
+  font-weight: bold;
   display: block;
+  margin-bottom: 16rpx;
 }
 
-.placeholder-text {
-  font-size: 26rpx;
-  color: #999999;
-  display: block;
-  margin-top: 16rpx;
+.video-player {
+  width: 100%;
+  height: 360rpx;
+  border-radius: 16rpx;
+  overflow: hidden;
 }
 
 @keyframes fadeIn {

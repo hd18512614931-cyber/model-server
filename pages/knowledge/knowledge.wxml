@@ -11,7 +11,7 @@
   <!-- 模块 B：横向滑动时间线 -->
   <view class="section">
     <text class="section-title">历史长河</text>
-    <text class="section-hint">← 横向滑动探索 · 点击展开详情 →</text>
+    <text class="section-hint">← 滑动探索 · 点击展开 →</text>
     <scroll-view scroll-x class="timeline-scroll" enhanced show-scrollbar="{{false}}">
       <view class="timeline-track">
         <view class="timeline-line"></view>
@@ -52,7 +52,7 @@
       <text>{{isAnimating ? '演示中...' : '▶ 演示套印顺序'}}</text>
     </view>
 
-    <view wx:if="{{isAnimating && animatingIndex >= 0 && animatingIndex < 5}}" class="step-hint">
+    <view wx:if="{{isAnimating && animatingIndex >= 0 && animatingIndex < colors.length}}" class="step-hint">
       <text>第{{colors[animatingIndex].order}}步：印{{colors[animatingIndex].name}}</text>
     </view>
 
@@ -64,6 +64,10 @@
       <view class="detail-row">
         <text class="detail-label">颜料来源：</text>
         <text>{{colors[activeColor].material}}</text>
+      </view>
+      <view class="detail-row">
+        <text class="detail-label">象征意义：</text>
+        <text>{{colors[activeColor].meaning}}</text>
       </view>
       <view class="detail-row">
         <text class="detail-label">套印顺序：</text>
@@ -144,12 +148,23 @@
     </block>
   </view>
 
-  <!-- 模块 F：视频预留 -->
+  <!-- 模块 F：影像记录 -->
   <view class="section">
     <text class="section-title">影像记录</text>
-    <view class="video-placeholder">
-      <text class="placeholder-icon">🎬</text>
-      <text class="placeholder-text">视频内容正在制作中...</text>
+    <view
+      wx:for="{{videos}}"
+      wx:key="src"
+      class="video-card"
+    >
+      <text class="video-title">{{item.title}}</text>
+      <video
+        class="video-player"
+        src="{{baseUrl}}/{{item.src}}"
+        poster="{{baseUrl}}/{{item.poster}}"
+        controls
+        object-fit="cover"
+        show-center-play-btn
+      ></video>
     </view>
   </view>
 
