@@ -132,3 +132,7 @@ page {
   max-width: 92vw;
   box-sizing: border-box;
 }
+
+.menu-icon {
+  margin-right: 6rpx;
+}

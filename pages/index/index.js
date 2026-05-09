@@ -223,5 +223,11 @@ Page({
     wx.navigateTo({
       url: '/pages/exploded-view/exploded-view'
     });
+  },
+
+  goToKnowledge() {
+    wx.navigateTo({
+      url: '/pages/knowledge/knowledge'
+    });
   }
 })
