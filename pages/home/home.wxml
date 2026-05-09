@@ -1,129 +1,18 @@
-<view class="home-page">
-  <swiper
-    class="home-swiper"
-    vertical="{{true}}"
-    style="height:100vh"
-    duration="{{600}}"
-    easing-function="easeInOutCubic"
-    bindchange="onSwiperChange"
-    current="{{currentPage}}"
-  >
-    <swiper-item id="section-0">
-      <view class="section-screen hero-section {{visiblePages[0] ? 'visible' : ''}}">
-        <video
-          src="{{heroVideoUrl}}"
-          autoplay
-          loop
-          muted
-          object-fit="cover"
-          class="bg-video"
-          controls="{{false}}"
-          show-center-play-btn="{{false}}"
-          show-play-btn="{{false}}"
-          enable-progress-gesture="{{false}}"
-        ></video>
-        <view class="hero-shade"></view>
+<view class="page-root">
+  <video
+    class="global-bg-video"
+    src="{{heroVideoUrl}}"
+    autoplay
+    loop
+    muted
+    object-fit="cover"
+    show-play-btn="{{false}}"
+    show-center-play-btn="{{false}}"
+    controls="{{false}}"
+    enable-progress-gesture="{{false}}"
+  ></video>
 
-        <view class="music-toggle {{musicPlaying ? 'playing' : ''}}" bindtap="toggleMusic">
-          <text>♪</text>
-        </view>
-
-        <view class="hero-content">
-          <view class="hero-copy {{heroReady ? 'hero-ready' : ''}}">
-            <view class="logo-stamp">
-              <text class="logo-line red">佛山</text>
-              <text class="logo-line yellow">木版</text>
-              <text class="logo-line blue">年画</text>
-            </view>
-            <text class="hero-title">佛山木版年画</text>
-            <text class="hero-subtitle">指尖上的非遗传承</text>
-          </view>
-        </view>
-
-        <view class="scroll-cue">
-          <text class="arrow">↓</text>
-          <text class="cue-text">向上滑动探索</text>
-        </view>
-      </view>
-    </swiper-item>
-
-    <swiper-item id="section-1">
-      <view class="section-screen timeline-section {{visiblePages[1] ? 'visible' : ''}}">
-        <scroll-view scroll-y class="timeline-scroll" style="height:100vh" enhanced show-scrollbar="{{false}}">
-          <view class="timeline-content">
-            <text class="section-title yellow-title">年画春秋</text>
-            <view class="timeline-list">
-              <view wx:for="{{timelineItems}}" wx:key="era" class="timeline-item">
-                <view class="timeline-node"></view>
-                <text class="era-label">{{item.era}}</text>
-                <view class="timeline-card {{item.highlight ? 'highlight-card' : ''}}">
-                  <text class="timeline-title">{{item.title}}</text>
-                  <text class="timeline-desc">{{item.desc}}</text>
-                  <image wx:if="{{item.image}}" class="timeline-image" src="{{item.image}}" mode="aspectFill" lazy-load></image>
-                  <video
-                    wx:if="{{item.videoUrl}}"
-                    src="{{item.videoUrl}}"
-                    controls
-                    enable-play-gesture
-                    show-center-play-btn
-                    object-fit="contain"
-                    class="making-video"
-                  ></video>
-                  <view wx:if="{{item.cta}}" class="timeline-cta" bindtap="goToCreate">体验AI二创 →</view>
-                </view>
-              </view>
-            </view>
-          </view>
-        </scroll-view>
-      </view>
-    </swiper-item>
-
-    <swiper-item id="section-2">
-      <view class="section-screen gallery-section {{visiblePages[2] ? 'visible' : ''}}">
-        <view class="section-inner">
-          <text class="section-title">作品展厅</text>
-
-          <view class="entry-cards">
-            <view class="entry-card red-card" bindtap="goToImmersiveGallery">
-              <text class="entry-icon">3D</text>
-              <text class="entry-title">3D 沉浸展厅</text>
-              <text class="entry-button">进入体验 →</text>
-            </view>
-            <view class="entry-card blue-card" bindtap="goToClassicGallery">
-              <text class="entry-icon">2D</text>
-              <text class="entry-title">2D 经典展厅</text>
-              <text class="entry-button">进入体验 →</text>
-            </view>
-          </view>
-
-          <scroll-view scroll-x class="preview-scroll" enhanced show-scrollbar="{{false}}">
-            <view class="preview-track">
-              <image
-                wx:for="{{previewImages}}"
-                wx:key="*this"
-                class="preview-image"
-                src="{{item}}"
-                mode="aspectFill"
-                lazy-load
-              ></image>
-            </view>
-          </scroll-view>
-        </view>
-      </view>
-    </swiper-item>
-
-    <swiper-item id="section-3">
-      <view class="section-screen ai-section {{visiblePages[3] ? 'visible' : ''}}">
-        <view class="section-inner center-inner">
-          <view class="ai-slogan">
-            <text>传统不只在博物馆</text>
-            <text>更在你的指尖</text>
-          </view>
-          <view class="create-button" bindtap="goToCreate">开启AI年画创作</view>
-        </view>
-      </view>
-    </swiper-item>
-  </swiper>
+  <view class="global-overlay"></view>
 
   <view class="nav-dots">
     <view
@@ -133,5 +22,111 @@
       bindtap="goToPage"
       data-page="{{item}}"
     ></view>
+  </view>
+
+  <view class="music-btn {{musicPlaying ? 'spinning' : ''}}" bindtap="toggleMusic">
+    <text>♪</text>
+  </view>
+
+  <swiper
+    class="main-swiper"
+    vertical="{{true}}"
+    duration="{{600}}"
+    easing-function="easeInOutCubic"
+    bindchange="onSwiperChange"
+    current="{{currentPage}}"
+  >
+    <swiper-item id="section-0">
+      <view class="screen screen-1">
+        <view class="title-group">
+          <text class="main-title">佛山木版年画</text>
+          <text class="sub-title">指尖上的非遗传承</text>
+        </view>
+        <view class="scroll-hint">
+          <text class="arrow-down">↓</text>
+          <text class="hint-text">向上滑动探索</text>
+        </view>
+      </view>
+    </swiper-item>
+
+    <swiper-item id="section-1">
+      <view class="screen screen-2">
+        <text class="section-title">年画春秋</text>
+        <view class="timeline">
+          <view class="tl-line"></view>
+
+          <view
+            wx:for="{{timelineItems}}"
+            wx:key="era"
+            class="tl-node"
+            bindtap="showTimelineDetail"
+            data-index="{{index}}"
+          >
+            <view class="tl-dot"></view>
+            <view class="tl-label glass-card {{item.highlight ? 'tl-highlight' : ''}}">
+              <text class="tl-era">{{item.era}}</text>
+              <text class="tl-brief">{{item.brief}}</text>
+            </view>
+          </view>
+        </view>
+      </view>
+    </swiper-item>
+
+    <swiper-item id="section-2">
+      <view class="screen screen-3">
+        <text class="section-title">作品展厅</text>
+
+        <scroll-view scroll-x class="preview-scroll" enhanced show-scrollbar="{{false}}">
+          <image
+            wx:for="{{previewImages}}"
+            wx:key="*this"
+            src="{{item}}"
+            mode="aspectFill"
+            class="preview-img glass-card"
+            lazy-load
+          ></image>
+        </scroll-view>
+
+        <view class="gallery-entries">
+          <view class="entry-card entry-3d glass-card" bindtap="goTo3D">
+            <text class="entry-icon">3D</text>
+            <text class="entry-title">3D 沉浸展厅</text>
+            <text class="entry-desc">旋转 · 缩放 · 沉浸体验</text>
+            <text class="entry-arrow">进入 →</text>
+          </view>
+          <view class="entry-card entry-2d glass-card" bindtap="goTo2D">
+            <text class="entry-icon">2D</text>
+            <text class="entry-title">2D 经典展厅</text>
+            <text class="entry-desc">高清年画 · 细节欣赏</text>
+            <text class="entry-arrow">进入 →</text>
+          </view>
+        </view>
+      </view>
+    </swiper-item>
+
+    <swiper-item id="section-3">
+      <view class="screen screen-4">
+        <view class="ai-slogan">
+          <text>传统不只在博物馆</text>
+          <text>更在你的指尖</text>
+        </view>
+        <view class="create-button" bindtap="goToCreate">开启AI年画创作</view>
+      </view>
+    </swiper-item>
+  </swiper>
+
+  <view class="detail-modal" wx:if="{{showDetail}}" bindtap="closeDetail">
+    <view class="detail-content glass-card" catchtap="noop">
+      <view class="detail-close" bindtap="closeDetail">×</view>
+      <text class="detail-era">{{detailData.era}}</text>
+      <text class="detail-title">{{detailData.title}}</text>
+      <image
+        wx:if="{{detailData.image}}"
+        src="{{detailData.image}}"
+        mode="widthFix"
+        class="detail-image"
+      ></image>
+      <text class="detail-text">{{detailData.content}}</text>
+    </view>
   </view>
 </view>
