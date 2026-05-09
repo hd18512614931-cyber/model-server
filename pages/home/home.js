@@ -1,62 +1,55 @@
-const RESOURCE_BASE_URL = 'https://model-server-rosy.vercel.app/knowledge/';
+const BASE_URL = 'https://model-server-rosy.vercel.app/knowledge/';
 
-function buildAssetUrl(filename) {
-  return RESOURCE_BASE_URL + encodeURIComponent(filename);
-}
+const ERA_DATA = [
+  {
+    year: '1736',
+    title: '木版年画的黄金时代',
+    desc: '佛山木版年画兴于明代永乐年间，盛于清代乾嘉时期。鼎盛时期，佛山经营年画的店铺多达两百余家，从业者数千人。年画题材涵盖门神、福禄寿全、戏曲故事，以红丹、绿、黄、黑四色套印为特色，形成了浓烈而喜庆的岭南风格。',
+    image: BASE_URL + 'baxian.jpg',
+    hasVideo: false,
+    isLast: false
+  },
+  {
+    year: '1912',
+    title: '传统与现代的碰撞',
+    desc: '民国时期，石印和胶版印刷技术传入中国，传统木版年画受到巨大冲击。佛山年画作坊从鼎盛时期的两百余家骤减至不足十家。然而，其粗犷的刀法、浓烈的色彩、吉祥的寓意，始终扎根于岭南民间。',
+    image: BASE_URL + 'carving-detail.jpg',
+    hasVideo: false,
+    isLast: false
+  },
+  {
+    year: '2006',
+    title: '刀木之间的坚守',
+    desc: '佛山木版年画入选首批国家级非物质文化遗产名录。老一辈传承人仍在坚持手工雕版、调色、套印的古法技艺。每一刀、每一色，都是对三百年手艺的敬畏。',
+    image: BASE_URL + 'woodblock-and-print.jpg',
+    hasVideo: true,
+    isLast: false
+  },
+  {
+    year: '2025',
+    title: '当AI遇见年画',
+    desc: '我们用3D建模、AI图像生成、交互动画等数字技术，让年画从纸面走进屏幕。传统不是用来封存的，而是用来重新想象的。',
+    image: '',
+    hasVideo: false,
+    isLast: true
+  }
+];
 
 Page({
   data: {
     currentPage: 0,
     musicPlaying: false,
     musicTriggered: false,
-    showDetail: false,
-    detailData: {},
-    navDots: [0, 1, 2, 3],
-    heroVideoUrl: buildAssetUrl('nianhua-story.mp4'),
-    timelineItems: [
-      {
-        era: '清 · 乾隆年间',
-        title: '木版年画的黄金时代',
-        brief: '木版年画的黄金时代',
-        content: '佛山木版年画兴于明代永乐年间，盛于清代乾嘉时期。鼎盛时期，佛山经营年画的店铺多达200多家，从业者数千人。',
-        image: buildAssetUrl('佛山木版年画1.jpg')
-      },
-      {
-        era: '民国 · 变革时期',
-        title: '传统与现代的碰撞',
-        brief: '传统与现代的碰撞',
-        content: '受机器印刷冲击，传统木版年画逐渐衰落。但其独特的岭南风格始终是民间文化的瑰宝。',
-        image: buildAssetUrl('佛山木版年画2.jpg')
-      },
-      {
-        era: '当代 · 非遗传承',
-        title: '刀木之间的坚守',
-        brief: '刀木之间的坚守',
-        content: '2006年，佛山木版年画入选首批国家级非物质文化遗产名录。',
-        image: buildAssetUrl('佛山木版年画3.jpg')
-      },
-      {
-        era: '未来 · 数字新生',
-        title: '当AI遇见年画',
-        brief: '当AI遇见年画 →',
-        content: '用3D建模、AI生成、交互动画等数字技术，让年画从纸面走进屏幕。',
-        image: '',
-        highlight: true
-      }
-    ],
-    previewImages: [
-      buildAssetUrl('佛山木版年画1.jpg'),
-      buildAssetUrl('佛山木版年画2.jpg'),
-      buildAssetUrl('佛山木版年画3.jpg'),
-      buildAssetUrl('佛山木版年画4.jpg'),
-      buildAssetUrl('佛山木版年画5.png'),
-      buildAssetUrl('佛山木版年画6.png'),
-      buildAssetUrl('佛山木版年画7.png')
-    ]
+    currentEra: -1,
+    showEraDetail: false,
+    eraDetail: {}
   },
 
   onLoad() {
-    this.initMusic();
+    this.bgMusic = wx.createInnerAudioContext();
+    this.bgMusic.src = BASE_URL + 'nianhua-story.mp4';
+    this.bgMusic.loop = true;
+    this.bgMusic.volume = 0.25;
   },
 
   onUnload() {
@@ -66,114 +59,59 @@ Page({
     }
   },
 
-  initMusic() {
-    this.bgMusic = wx.createInnerAudioContext();
-    this.bgMusic.src = buildAssetUrl('nianhua-story.mp4');
-    this.bgMusic.loop = true;
-    this.bgMusic.volume = 0.3;
-    this.bgMusic.onPause(() => {
-      if (this.data.musicPlaying) {
-        this.setData({ musicPlaying: false });
-      }
-    });
-    this.bgMusic.onStop(() => {
-      if (this.data.musicPlaying) {
-        this.setData({ musicPlaying: false });
-      }
-    });
-    this.bgMusic.onError((err) => {
-      console.error('[Home] 背景音乐播放失败:', err);
-      this.setData({ musicPlaying: false });
-    });
-  },
-
   onSwiperChange(e) {
-    const currentPage = e.detail.current;
-    this.setData({ currentPage });
+    const page = e.detail.current;
+    this.setData({ currentPage: page });
 
-    if (!this.data.musicPlaying && !this.data.musicTriggered) {
-      this.startMusic();
+    if (!this.data.musicTriggered) {
+      this.bgMusic.play();
+      this.setData({ musicPlaying: true, musicTriggered: true });
     }
   },
 
   goToPage(e) {
-    const currentPage = parseInt(e.currentTarget.dataset.page, 10);
-    this.setData({ currentPage });
+    const page = parseInt(e.currentTarget.dataset.page, 10);
+    this.setData({ currentPage: page });
   },
 
   toggleMusic() {
-    if (!this.bgMusic) {
-      this.initMusic();
-    }
-
     if (this.data.musicPlaying) {
       this.bgMusic.pause();
       this.setData({ musicPlaying: false });
       return;
     }
 
-    this.startMusic();
-  },
-
-  startMusic() {
-    if (!this.bgMusic) {
-      this.initMusic();
-    }
-
     this.bgMusic.play();
+    this.setData({ musicPlaying: true, musicTriggered: true });
+  },
+
+  onEraTap(e) {
+    const index = parseInt(e.currentTarget.dataset.index, 10);
     this.setData({
-      musicPlaying: true,
-      musicTriggered: true
+      currentEra: index,
+      showEraDetail: true,
+      eraDetail: ERA_DATA[index]
     });
   },
 
-  showTimelineDetail(e) {
-    const index = Number(e.currentTarget.dataset.index);
-    if (index === 3) {
-      this.goToCreate();
-      return;
-    }
-
+  closeEraDetail() {
     this.setData({
-      showDetail: true,
-      detailData: this.data.timelineItems[index]
+      showEraDetail: false,
+      currentEra: -1
     });
-  },
-
-  closeDetail() {
-    this.setData({ showDetail: false });
   },
 
   noop() {},
 
   goTo3D() {
-    wx.navigateTo({
-      url: '/pages/index/index'
-    });
+    wx.navigateTo({ url: '/pages/index/index' });
   },
 
   goTo2D() {
-    wx.navigateTo({
-      url: '/pages/gallery/gallery',
-      fail: () => {
-        wx.navigateTo({
-          url: '/pages/index/index'
-        });
-      }
-    });
-  },
-
-  goToImmersiveGallery() {
-    this.goTo3D();
-  },
-
-  goToClassicGallery() {
-    this.goTo2D();
+    wx.navigateTo({ url: '/pages/gallery/gallery' });
   },
 
   goToCreate() {
-    wx.navigateTo({
-      url: '/pages/create/create'
-    });
+    wx.navigateTo({ url: '/pages/create/create' });
   }
 });

@@ -1,7 +1,7 @@
 <view class="page-root">
   <video
     class="global-bg-video"
-    src="{{heroVideoUrl}}"
+    src="https://model-server-rosy.vercel.app/knowledge/nianhua-story.mp4"
     autoplay
     loop
     muted
@@ -11,122 +11,145 @@
     controls="{{false}}"
     enable-progress-gesture="{{false}}"
   ></video>
-
   <view class="global-overlay"></view>
 
-  <view class="nav-dots">
-    <view
-      wx:for="{{navDots}}"
-      wx:key="*this"
-      class="dot {{currentPage === item ? 'active' : ''}}"
-      bindtap="goToPage"
-      data-page="{{item}}"
-    ></view>
+  <view class="music-btn {{musicPlaying ? 'spinning' : ''}}" bindtap="toggleMusic">
+    <text class="music-icon">{{musicPlaying ? '♫' : '♪'}}</text>
   </view>
 
-  <view class="music-btn {{musicPlaying ? 'spinning' : ''}}" bindtap="toggleMusic">
-    <text>♪</text>
+  <view class="nav-dots">
+    <view class="dot {{currentPage===0?'active':''}}" bindtap="goToPage" data-page="0"></view>
+    <view class="dot {{currentPage===1?'active':''}}" bindtap="goToPage" data-page="1"></view>
+    <view class="dot {{currentPage===2?'active':''}}" bindtap="goToPage" data-page="2"></view>
+    <view class="dot {{currentPage===3?'active':''}}" bindtap="goToPage" data-page="3"></view>
   </view>
 
   <swiper
     class="main-swiper"
     vertical="{{true}}"
-    duration="{{600}}"
+    duration="{{500}}"
     easing-function="easeInOutCubic"
     bindchange="onSwiperChange"
     current="{{currentPage}}"
   >
-    <swiper-item id="section-0">
+    <swiper-item>
       <view class="screen screen-1">
-        <view class="title-group">
-          <text class="main-title">佛山木版年画</text>
-          <text class="sub-title">指尖上的非遗传承</text>
+        <view class="s1-content">
+          <text class="s1-subtitle">非遗 · 数字体验</text>
+          <text class="s1-title">佛山木版年画</text>
+          <text class="s1-desc">刀锋与木纹之间，藏着三百年的故事</text>
         </view>
-        <view class="scroll-hint">
-          <text class="arrow-down">↓</text>
-          <text class="hint-text">向上滑动探索</text>
+        <view class="s1-bottom">
+          <view class="scroll-arrow">
+            <text class="arrow-text">↓</text>
+          </view>
         </view>
       </view>
     </swiper-item>
 
-    <swiper-item id="section-1">
+    <swiper-item>
       <view class="screen screen-2">
-        <text class="section-title">年画春秋</text>
+        <view class="s2-header">
+          <text class="s2-label">溯 源</text>
+        </view>
         <view class="timeline">
           <view class="tl-line"></view>
 
-          <view
-            wx:for="{{timelineItems}}"
-            wx:key="era"
-            class="tl-node"
-            bindtap="showTimelineDetail"
-            data-index="{{index}}"
-          >
+          <view class="tl-node {{currentEra===0?'tl-active':''}}" bindtap="onEraTap" data-index="0">
             <view class="tl-dot"></view>
-            <view class="tl-label glass-card {{item.highlight ? 'tl-highlight' : ''}}">
-              <text class="tl-era">{{item.era}}</text>
-              <text class="tl-brief">{{item.brief}}</text>
+            <view class="tl-content">
+              <text class="tl-year">1736</text>
+              <text class="tl-era-name">清 · 乾隆年间</text>
+              <text class="tl-one-line">年画店铺两百余家，从业者数千人</text>
+            </view>
+          </view>
+
+          <view class="tl-node {{currentEra===1?'tl-active':''}}" bindtap="onEraTap" data-index="1">
+            <view class="tl-dot"></view>
+            <view class="tl-content">
+              <text class="tl-year">1912</text>
+              <text class="tl-era-name">民国 · 变革时期</text>
+              <text class="tl-one-line">机器印刷冲击下的艰难坚守</text>
+            </view>
+          </view>
+
+          <view class="tl-node {{currentEra===2?'tl-active':''}}" bindtap="onEraTap" data-index="2">
+            <view class="tl-dot"></view>
+            <view class="tl-content">
+              <text class="tl-year">2006</text>
+              <text class="tl-era-name">当代 · 非遗传承</text>
+              <text class="tl-one-line">首批国家级非物质文化遗产</text>
+            </view>
+          </view>
+
+          <view class="tl-node {{currentEra===3?'tl-active':''}}" bindtap="onEraTap" data-index="3">
+            <view class="tl-dot dot-future"></view>
+            <view class="tl-content">
+              <text class="tl-year">2025</text>
+              <text class="tl-era-name">未来 · 数字新生</text>
+              <text class="tl-one-line">AI与年画的第一次对话</text>
             </view>
           </view>
         </view>
       </view>
     </swiper-item>
 
-    <swiper-item id="section-2">
+    <swiper-item>
       <view class="screen screen-3">
-        <text class="section-title">作品展厅</text>
-
-        <scroll-view scroll-x class="preview-scroll" enhanced show-scrollbar="{{false}}">
-          <image
-            wx:for="{{previewImages}}"
-            wx:key="*this"
-            src="{{item}}"
-            mode="aspectFill"
-            class="preview-img glass-card"
-            lazy-load
-          ></image>
-        </scroll-view>
-
-        <view class="gallery-entries">
-          <view class="entry-card entry-3d glass-card" bindtap="goTo3D">
-            <text class="entry-icon">3D</text>
-            <text class="entry-title">3D 沉浸展厅</text>
-            <text class="entry-desc">旋转 · 缩放 · 沉浸体验</text>
-            <text class="entry-arrow">进入 →</text>
+        <view class="gallery-split">
+          <view class="gallery-half gallery-3d" bindtap="goTo3D">
+            <text class="gallery-label">3D 展厅</text>
+            <text class="gallery-hint">沉浸 · 旋转 · 探索</text>
+            <text class="gallery-arrow">→</text>
           </view>
-          <view class="entry-card entry-2d glass-card" bindtap="goTo2D">
-            <text class="entry-icon">2D</text>
-            <text class="entry-title">2D 经典展厅</text>
-            <text class="entry-desc">高清年画 · 细节欣赏</text>
-            <text class="entry-arrow">进入 →</text>
+          <view class="gallery-divider"></view>
+          <view class="gallery-half gallery-2d" bindtap="goTo2D">
+            <text class="gallery-label">2D 展厅</text>
+            <text class="gallery-hint">经典 · 高清 · 细赏</text>
+            <text class="gallery-arrow">→</text>
           </view>
         </view>
       </view>
     </swiper-item>
 
-    <swiper-item id="section-3">
+    <swiper-item>
       <view class="screen screen-4">
-        <view class="ai-slogan">
-          <text>传统不只在博物馆</text>
-          <text>更在你的指尖</text>
+        <view class="s4-content">
+          <text class="s4-line1">传统不只在博物馆</text>
+          <text class="s4-line2">更在你的指尖</text>
+          <view class="s4-btn" bindtap="goToCreate">
+            <text class="s4-btn-text">开启 AI 创作</text>
+          </view>
         </view>
-        <view class="create-button" bindtap="goToCreate">开启AI年画创作</view>
       </view>
     </swiper-item>
   </swiper>
 
-  <view class="detail-modal" wx:if="{{showDetail}}" bindtap="closeDetail">
-    <view class="detail-content glass-card" catchtap="noop">
-      <view class="detail-close" bindtap="closeDetail">×</view>
-      <text class="detail-era">{{detailData.era}}</text>
-      <text class="detail-title">{{detailData.title}}</text>
+  <view class="era-modal" wx:if="{{showEraDetail}}" bindtap="closeEraDetail">
+    <view class="era-modal-content" catchtap="noop">
+      <view class="era-modal-close" bindtap="closeEraDetail">✕</view>
+      <text class="era-modal-year">{{eraDetail.year}}</text>
+      <text class="era-modal-title">{{eraDetail.title}}</text>
       <image
-        wx:if="{{detailData.image}}"
-        src="{{detailData.image}}"
+        wx:if="{{eraDetail.image}}"
+        src="{{eraDetail.image}}"
         mode="widthFix"
-        class="detail-image"
+        class="era-modal-img"
       ></image>
-      <text class="detail-text">{{detailData.content}}</text>
+      <text class="era-modal-text">{{eraDetail.desc}}</text>
+      <view wx:if="{{eraDetail.hasVideo}}" class="era-modal-video-wrap">
+        <video
+          src="https://model-server-rosy.vercel.app/knowledge/nianhua-making.mp4"
+          controls
+          enable-play-gesture
+          show-center-play-btn
+          object-fit="contain"
+          class="era-modal-video"
+        ></video>
+      </view>
+      <view wx:if="{{eraDetail.isLast}}" class="era-modal-btn" bindtap="goToCreate">
+        <text>体验 AI 二创 →</text>
+      </view>
     </view>
   </view>
 </view>
