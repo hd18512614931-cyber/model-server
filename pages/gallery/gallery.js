@@ -4,8 +4,8 @@ const MODEL_BASE_URL = 'https://model-server-rosy.vercel.app/models/';
 const MAX_USER_MODELS = 5;
 const PRESET_MODELS = [
   { id: 'preset_ai_generated', name: 'AI 生成模型', file: 'ai-generated.glb', emoji: '', color: '#D4A849' },
-  { id: 'preset_house', name: '房屋', file: 'house.glb', emoji: '', color: '#87CEEB' },
-  { id: 'preset_chman', name: '棋子', file: 'chman.glb', emoji: '♟️', color: '#DDA0DD' }
+  { id: 'preset_house', name: '木板展示 · 壹', file: 'house.glb', emoji: '', color: '#87CEEB' },
+  { id: 'preset_chman', name: '木板展示 · 贰', file: 'chman.glb', emoji: '', color: '#DDA0DD' }
 ];
 
 Page({

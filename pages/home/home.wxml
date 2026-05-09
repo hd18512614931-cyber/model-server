@@ -1,0 +1,137 @@
+<view class="home-page">
+  <swiper
+    class="home-swiper"
+    vertical="{{true}}"
+    style="height:100vh"
+    duration="{{600}}"
+    easing-function="easeInOutCubic"
+    bindchange="onSwiperChange"
+    current="{{currentPage}}"
+  >
+    <swiper-item id="section-0">
+      <view class="section-screen hero-section {{visiblePages[0] ? 'visible' : ''}}">
+        <video
+          src="{{heroVideoUrl}}"
+          autoplay
+          loop
+          muted
+          object-fit="cover"
+          class="bg-video"
+          controls="{{false}}"
+          show-center-play-btn="{{false}}"
+          show-play-btn="{{false}}"
+          enable-progress-gesture="{{false}}"
+        ></video>
+        <view class="hero-shade"></view>
+
+        <view class="music-toggle {{musicPlaying ? 'playing' : ''}}" bindtap="toggleMusic">
+          <text>♪</text>
+        </view>
+
+        <view class="hero-content">
+          <view class="hero-copy {{heroReady ? 'hero-ready' : ''}}">
+            <view class="logo-stamp">
+              <text class="logo-line red">佛山</text>
+              <text class="logo-line yellow">木版</text>
+              <text class="logo-line blue">年画</text>
+            </view>
+            <text class="hero-title">佛山木版年画</text>
+            <text class="hero-subtitle">指尖上的非遗传承</text>
+          </view>
+        </view>
+
+        <view class="scroll-cue">
+          <text class="arrow">↓</text>
+          <text class="cue-text">向上滑动探索</text>
+        </view>
+      </view>
+    </swiper-item>
+
+    <swiper-item id="section-1">
+      <view class="section-screen timeline-section {{visiblePages[1] ? 'visible' : ''}}">
+        <scroll-view scroll-y class="timeline-scroll" style="height:100vh" enhanced show-scrollbar="{{false}}">
+          <view class="timeline-content">
+            <text class="section-title yellow-title">年画春秋</text>
+            <view class="timeline-list">
+              <view wx:for="{{timelineItems}}" wx:key="era" class="timeline-item">
+                <view class="timeline-node"></view>
+                <text class="era-label">{{item.era}}</text>
+                <view class="timeline-card {{item.highlight ? 'highlight-card' : ''}}">
+                  <text class="timeline-title">{{item.title}}</text>
+                  <text class="timeline-desc">{{item.desc}}</text>
+                  <image wx:if="{{item.image}}" class="timeline-image" src="{{item.image}}" mode="aspectFill" lazy-load></image>
+                  <video
+                    wx:if="{{item.videoUrl}}"
+                    src="{{item.videoUrl}}"
+                    controls
+                    enable-play-gesture
+                    show-center-play-btn
+                    object-fit="contain"
+                    class="making-video"
+                  ></video>
+                  <view wx:if="{{item.cta}}" class="timeline-cta" bindtap="goToCreate">体验AI二创 →</view>
+                </view>
+              </view>
+            </view>
+          </view>
+        </scroll-view>
+      </view>
+    </swiper-item>
+
+    <swiper-item id="section-2">
+      <view class="section-screen gallery-section {{visiblePages[2] ? 'visible' : ''}}">
+        <view class="section-inner">
+          <text class="section-title">作品展厅</text>
+
+          <view class="entry-cards">
+            <view class="entry-card red-card" bindtap="goToImmersiveGallery">
+              <text class="entry-icon">3D</text>
+              <text class="entry-title">3D 沉浸展厅</text>
+              <text class="entry-button">进入体验 →</text>
+            </view>
+            <view class="entry-card blue-card" bindtap="goToClassicGallery">
+              <text class="entry-icon">2D</text>
+              <text class="entry-title">2D 经典展厅</text>
+              <text class="entry-button">进入体验 →</text>
+            </view>
+          </view>
+
+          <scroll-view scroll-x class="preview-scroll" enhanced show-scrollbar="{{false}}">
+            <view class="preview-track">
+              <image
+                wx:for="{{previewImages}}"
+                wx:key="*this"
+                class="preview-image"
+                src="{{item}}"
+                mode="aspectFill"
+                lazy-load
+              ></image>
+            </view>
+          </scroll-view>
+        </view>
+      </view>
+    </swiper-item>
+
+    <swiper-item id="section-3">
+      <view class="section-screen ai-section {{visiblePages[3] ? 'visible' : ''}}">
+        <view class="section-inner center-inner">
+          <view class="ai-slogan">
+            <text>传统不只在博物馆</text>
+            <text>更在你的指尖</text>
+          </view>
+          <view class="create-button" bindtap="goToCreate">开启AI年画创作</view>
+        </view>
+      </view>
+    </swiper-item>
+  </swiper>
+
+  <view class="nav-dots">
+    <view
+      wx:for="{{navDots}}"
+      wx:key="*this"
+      class="dot {{currentPage === item ? 'active' : ''}}"
+      bindtap="goToPage"
+      data-page="{{item}}"
+    ></view>
+  </view>
+</view>

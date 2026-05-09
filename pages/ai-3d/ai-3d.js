@@ -65,24 +65,26 @@ Page({
       // 轮询任务状态
       this.setData({ loadingText: 'AI 正在生成 3D 模型...' })
       const result = await this._pollTaskStatus(taskId, serverBase)
+      let localGlbPath = ''
 
       if (result.modelUrl) {
-        app.globalData._pendingModelUrl = result.modelUrl
-        app.globalData._pendingModelName = 'AI 生成模型'
-        wx.showToast({ title: '生成成功！', icon: 'success' })
-        setTimeout(() => {
-          wx.navigateTo({ url: '/pages/model3d-viewer/model3d-viewer' })
-        }, 500)
+        localGlbPath = await this._downloadModelFile(result.modelUrl)
       } else if (result.fileUrl) {
-        const localGlbPath = await this._downloadAndUnzip(result.fileUrl)
-        app.globalData._pendingModelUrl = localGlbPath
-        app.globalData._pendingModelName = 'AI 生成模型'
-        wx.showToast({ title: '生成成功！', icon: 'success' })
-        setTimeout(() => {
-          wx.navigateTo({ url: '/pages/model3d-viewer/model3d-viewer' })
-        }, 500)
+        localGlbPath = result.fileFormat === 'zip' || this._isZipUrl(result.fileUrl)
+          ? await this._downloadAndUnzip(result.fileUrl)
+          : await this._downloadModelFile(result.fileUrl)
       }
 
+      if (!localGlbPath) {
+        throw new Error('生成完成但模型文件保存失败')
+      }
+
+      app.globalData._pendingModelUrl = localGlbPath
+      app.globalData._pendingModelName = 'AI 生成模型'
+      wx.showToast({ title: '生成成功！', icon: 'success' })
+      setTimeout(() => {
+        wx.navigateTo({ url: '/pages/model3d-viewer/model3d-viewer' })
+      }, 500)
     } catch (err) {
       console.error('[AI-3D] 错误:', err)
       wx.showModal({
@@ -208,8 +210,12 @@ Page({
                 }
 
                 console.log('[AI-3D] 找到 GLB 文件:', glbFile)
-                self._saveModelToHistory(glbFile, 'AI 生成模型')
-                resolve(glbFile)
+                const savedModel = self._saveModelToHistory(glbFile, 'AI 生成模型')
+                if (!savedModel) {
+                  reject(new Error('模型保存失败'))
+                  return
+                }
+                resolve(savedModel.path)
               } catch (err) {
                 console.error('[AI-3D] 读取解压目录失败:', err)
                 reject(new Error('解压后读取文件失败'))
@@ -232,6 +238,44 @@ Page({
         const total = (progress.totalBytesExpectedToWrite / 1048576).toFixed(1)
         self.setData({
           loadingText: '正在下载模型 (' + received + 'MB/' + total + 'MB)...'
+        })
+      })
+    })
+  },
+
+  _downloadModelFile(fileUrl) {
+    const self = this
+    return new Promise((resolve, reject) => {
+      self.setData({ loadingText: '正在下载模型文件...' })
+
+      const downloadTask = wx.downloadFile({
+        url: fileUrl,
+        success: (dlRes) => {
+          if (dlRes.statusCode !== 200) {
+            reject(new Error('下载失败，HTTP ' + dlRes.statusCode))
+            return
+          }
+
+          const savedModel = self._saveModelToHistory(dlRes.tempFilePath, 'AI 生成模型')
+          if (!savedModel) {
+            reject(new Error('模型保存失败'))
+            return
+          }
+          resolve(savedModel.path)
+        },
+        fail: (err) => {
+          console.error('[AI-3D] 下载失败:', err)
+          reject(new Error('模型文件下载失败，请重试'))
+        }
+      })
+
+      downloadTask.onProgressUpdate((progress) => {
+        const received = (progress.totalBytesWritten / 1048576).toFixed(1)
+        const total = progress.totalBytesExpectedToWrite > 0
+          ? '/' + (progress.totalBytesExpectedToWrite / 1048576).toFixed(1) + 'MB'
+          : ''
+        self.setData({
+          loadingText: '正在下载模型 (' + received + 'MB' + total + ')...'
         })
       })
     })
@@ -286,15 +330,18 @@ Page({
       fs.copyFileSync(glbSourcePath, savePath)
     } catch (err) {
       console.error('[AI-3D] 保存模型文件失败:', err)
-      return
+      return null
     }
 
     let history = wx.getStorageSync('modelHistory') || []
-    history.unshift({
+    const record = {
+      id: 'model_' + timestamp,
       name: modelName,
       path: savePath,
+      timestamp: timestamp,
       time: this._formatTime(new Date())
-    })
+    }
+    history.unshift(record)
 
     while (history.length > 5) {
       const old = history.pop()
@@ -303,6 +350,11 @@ Page({
 
     wx.setStorageSync('modelHistory', history)
     this.setData({ modelHistory: history })
+    return record
+  },
+
+  _isZipUrl(fileUrl) {
+    return fileUrl.split('?')[0].toLowerCase().endsWith('.zip')
   },
 
   _formatTime(date) {

@@ -3,7 +3,7 @@
   "projectname": "foshan-nianhua-frontend",
   "condition": {},
   "setting": {
-    "urlCheck": false,
+    "urlCheck": true,
     "coverView": true,
     "lazyloadPlaceholderEnable": false,
     "skylineRenderEnable": false,
