@@ -1,7 +1,7 @@
 <view class="page-root">
   <video
     class="global-bg-video"
-    src="https://model-server-rosy.vercel.app/knowledge/nianhua-story.mp4"
+    src="{{VIDEOS.story}}"
     autoplay
     loop
     muted
@@ -153,7 +153,7 @@
           >
             <view class="flip-inner {{item.flipped ? 'flipped' : ''}}">
               <view class="flip-front">
-                <image src="{{baseUrl}}{{item.image}}" mode="aspectFill" class="flip-img" lazy-load></image>
+                <image src="{{item.image}}" mode="aspectFill" class="flip-img" lazy-load></image>
                 <text class="flip-name">{{item.title}}</text>
               </view>
               <view class="flip-back">
@@ -219,8 +219,8 @@
             <text class="video-item-title">木版年画制作工艺</text>
             <video
               class="video-player"
-              src="https://model-server-rosy.vercel.app/knowledge/nianhua-making.mp4"
-              poster="https://model-server-rosy.vercel.app/knowledge/coloring-closeup.jpg"
+              src="{{VIDEOS.making}}"
+              poster="{{IMAGES.coloringCloseup}}"
               controls
               enable-play-gesture
               show-center-play-btn
@@ -232,8 +232,8 @@
             <text class="video-item-title">年画故事与传承</text>
             <video
               class="video-player"
-              src="https://model-server-rosy.vercel.app/knowledge/nianhua-story.mp4"
-              poster="https://model-server-rosy.vercel.app/knowledge/baxian.jpg"
+              src="{{VIDEOS.story}}"
+              poster="{{IMAGES.baxian}}"
               controls
               enable-play-gesture
               show-center-play-btn
@@ -341,7 +341,7 @@
       <text class="era-modal-text">{{eraDetail.desc}}</text>
       <view wx:if="{{eraDetail.hasVideo}}" class="era-modal-video-wrap">
         <video
-          src="https://model-server-rosy.vercel.app/knowledge/nianhua-making.mp4"
+          src="{{VIDEOS.making}}"
           controls
           enable-play-gesture
           show-center-play-btn

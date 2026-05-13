@@ -1,16 +1,17 @@
-const app = getApp();
-const LAYER_BASE_URL = 'https://model-server-rosy.vercel.app/layers';
-const HOME_LAYER_CACHE_KEY = 'homeLayersLogoDemoV1';
+const { layerFileID } = require('../../constants/cloudAssets');
+const { resolveCloudURL } = require('../../utils/resolveCloudURL');
+
+const HOME_LAYER_CACHE_KEY = 'homeLayersLogoDemoCloudV1';
 const HOME_LAYER_URLS = [
-  LAYER_BASE_URL + '/logo-demo/layer_8.png',
-  LAYER_BASE_URL + '/logo-demo/layer_7.png',
-  LAYER_BASE_URL + '/logo-demo/layer_6.png',
-  LAYER_BASE_URL + '/logo-demo/layer_5.png',
-  LAYER_BASE_URL + '/logo-demo/layer_4.png',
-  LAYER_BASE_URL + '/logo-demo/layer_3.png',
-  LAYER_BASE_URL + '/logo-demo/layer_2.png',
-  LAYER_BASE_URL + '/logo-demo/layer_1.png',
-  LAYER_BASE_URL + '/logo-demo/layer_0.png'
+  layerFileID('logo-demo', 8),
+  layerFileID('logo-demo', 7),
+  layerFileID('logo-demo', 6),
+  layerFileID('logo-demo', 5),
+  layerFileID('logo-demo', 4),
+  layerFileID('logo-demo', 3),
+  layerFileID('logo-demo', 2),
+  layerFileID('logo-demo', 1),
+  layerFileID('logo-demo', 0)
 ];
 
 function buildHomeLayers(paths) {
@@ -73,7 +74,7 @@ Page({
     for (let i = 0; i < HOME_LAYER_URLS.length; i++) {
       try {
         const localPath = await this._downloadHomeLayer(HOME_LAYER_URLS[i], i);
-        downloadedLayers.push({ localPath });
+        downloadedLayers.push({ fileID: HOME_LAYER_URLS[i], localPath });
       } catch (err) {
         console.error('下载图层失败:', HOME_LAYER_URLS[i], err);
       }
@@ -113,7 +114,8 @@ Page({
     }
   },
 
-  _downloadHomeLayer(url, index) {
+  async _downloadHomeLayer(fileID, index) {
+    const url = await resolveCloudURL(fileID);
     return new Promise((resolve, reject) => {
       wx.downloadFile({
         url,

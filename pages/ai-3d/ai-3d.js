@@ -1,4 +1,5 @@
 const app = getApp()
+const { getApiBaseURL } = require('../../utils/apiBaseURL')
 
 Page({
   data: {
@@ -36,7 +37,18 @@ Page({
   async generate3D() {
     if (!this.data.imagePath || this.data.loading) return
 
-    const serverBase = app.globalData.serverBase
+    let serverBase
+    try {
+      serverBase = getApiBaseURL()
+    } catch (err) {
+      wx.showModal({
+        title: '接口未配置',
+        content: err.message,
+        showCancel: false
+      })
+      return
+    }
+
     this.setData({ loading: true, loadingText: '正在压缩图片...' })
 
     try {

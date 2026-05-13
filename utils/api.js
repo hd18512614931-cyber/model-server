@@ -1,11 +1,8 @@
 const app = getApp();
+const { IMAGES } = require('../constants/cloudAssets');
+const { getApiBaseURL } = require('./apiBaseURL');
 
 const request = (url, method, data) => {
-  // 动态读取全局配置，确保取得最新状态
-  const baseURL = (app && app.globalData && app.globalData.apiBaseUrl) 
-    ? app.globalData.apiBaseUrl 
-    : 'http://localhost:8000';
-    
   const useMock = (app && app.globalData && app.globalData.useMock !== undefined) 
     ? app.globalData.useMock 
     : false;
@@ -18,15 +15,23 @@ const request = (url, method, data) => {
         wx.hideLoading();
         resolve({
           layers: [
-            { id: 1, name: '底色层', color: '#F5E6D3', order: 1, url: 'https://via.placeholder.com/600x800/F5E6D3/F5E6D3?text=Base', active: true, zIndex: 1 },
-            { id: 2, name: '绿色层', color: '#4A7A59', order: 2, url: 'https://via.placeholder.com/600x800/FFFFFF/4A7A59?text=Green', active: true, zIndex: 2 },
-            { id: 3, name: '黄色层', color: '#C8A063', order: 3, url: 'https://via.placeholder.com/600x800/FFFFFF/C8A063?text=Yellow', active: true, zIndex: 3 },
-            { id: 4, name: '红色层', color: '#D9281C', order: 4, url: 'https://via.placeholder.com/600x800/FFFFFF/D9281C?text=Red', active: true, zIndex: 4 },
-            { id: 5, name: '线稿层', color: '#000000', order: 5, url: 'https://via.placeholder.com/600x800/FFFFFF/000000?text=Line', active: true, zIndex: 5 }
+            { id: 1, name: '底色层', color: '#F5E6D3', order: 1, url: IMAGES.boardDisplay, active: true, zIndex: 1 },
+            { id: 2, name: '绿色层', color: '#4A7A59', order: 2, url: IMAGES.drying, active: true, zIndex: 2 },
+            { id: 3, name: '黄色层', color: '#C8A063', order: 3, url: IMAGES.coloringCloseup, active: true, zIndex: 3 },
+            { id: 4, name: '红色层', color: '#D9281C', order: 4, url: IMAGES.baxian, active: true, zIndex: 4 },
+            { id: 5, name: '线稿层', color: '#000000', order: 5, url: IMAGES.carvingHD, active: true, zIndex: 5 }
           ]
         });
       }, 1500);
     });
+  }
+
+  // 动态读取全局配置，确保取得最新状态
+  let baseURL;
+  try {
+    baseURL = getApiBaseURL();
+  } catch (err) {
+    return Promise.reject(err);
   }
 
   // 正常接口请求添加拦截 Loading
@@ -81,4 +86,4 @@ const api = {
   }
 };
 
-export default api;
+module.exports = api;

@@ -1,4 +1,5 @@
-const SPLIT_API_URL = 'https://model-server-rosy.vercel.app/api/split-colors';
+const { getApiBaseURL } = require('../../utils/apiBaseURL');
+
 const USER_CACHE_KEY = 'userColorLayers';
 const MAX_USER_RECORDS = 10;
 
@@ -156,7 +157,7 @@ Page({
   _requestSplitColors(imageBase64) {
     return new Promise((resolve, reject) => {
       wx.request({
-        url: SPLIT_API_URL,
+        url: `${getApiBaseURL()}/api/split-colors`,
         method: 'POST',
         header: {
           'Content-Type': 'application/json'

@@ -1,7 +1,7 @@
 <scroll-view scroll-y class="page">
   <!-- 模块 A：Banner -->
   <view class="banner">
-    <image src="{{baseUrl}}/woodblock-and-print.jpg" mode="aspectFill" class="banner-img" lazy-load />
+    <image src="{{IMAGES.boardDisplay}}" mode="aspectFill" class="banner-img" lazy-load />
     <view class="banner-overlay">
       <text class="banner-title">佛山木版年画</text>
       <text class="banner-subtitle">国家级非物质文化遗产 · 岭南民间艺术瑰宝</text>
@@ -76,7 +76,7 @@
       <text class="detail-desc">{{colors[activeColor].desc}}</text>
     </view>
 
-    <image src="{{baseUrl}}/coloring-closeup.jpg" mode="widthFix" class="craft-image" lazy-load />
+    <image src="{{IMAGES.coloringCloseup}}" mode="widthFix" class="craft-image" lazy-load />
     <text class="image-caption">▲ 匠人为木版上色</text>
   </view>
 
@@ -93,7 +93,7 @@
       >
         <view class="card-inner {{item.flipped ? 'flipped' : ''}}">
           <view class="card-front">
-            <image src="{{baseUrl}}/{{item.image}}" mode="aspectFill" class="card-image" lazy-load />
+            <image src="{{item.image}}" mode="aspectFill" class="card-image" lazy-load />
             <view class="card-label">
               <text class="card-category">{{item.category}}</text>
               <text class="card-title-small">{{item.title}}</text>
@@ -159,8 +159,8 @@
       <text class="video-title">{{item.title}}</text>
       <video
         class="video-player"
-        src="{{baseUrl}}/{{item.src}}"
-        poster="{{baseUrl}}/{{item.poster}}"
+        src="{{item.src}}"
+        poster="{{item.poster}}"
         controls
         object-fit="cover"
         show-center-play-btn

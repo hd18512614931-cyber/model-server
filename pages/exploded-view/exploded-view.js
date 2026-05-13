@@ -1,21 +1,23 @@
-const API_URL = 'https://model-server-rosy.vercel.app/api/split-colors';
 const USER_CACHE_KEY = 'userColorLayers';
-const PRESET_CACHE_KEY = 'presetColorLayers';
-const LAYER_BASE_URL = 'https://model-server-rosy.vercel.app/layers';
+const PRESET_CACHE_KEY = 'presetColorLayersCloudV1';
+const { layerFileID } = require('../../constants/cloudAssets');
+const { getApiBaseURL } = require('../../utils/apiBaseURL');
+const { resolveCloudURL } = require('../../utils/resolveCloudURL');
+
 const MAX_USER_RECORDS = 10;
 const PRESET_GALLERIES = [
   {
     id: 'nianhua-demo',
     title: '佛山木版年画示例',
     isPreset: true,
-    remotePrefix: LAYER_BASE_URL + '/nianhua-demo',
+    cloudPrefix: 'nianhua-demo',
     layerCount: 5
   },
   {
     id: 'longtou',
     title: '龙头年画',
     isPreset: true,
-    remotePrefix: LAYER_BASE_URL + '/longtou',
+    cloudPrefix: 'longtou',
     layerCount: 5
   }
 ];
@@ -328,10 +330,12 @@ Page({
     return layers.length === gallery.layerCount ? layers : [];
   },
 
-  _downloadPresetLayer(gallery, index) {
+  async _downloadPresetLayer(gallery, index) {
+    const fileID = layerFileID(gallery.cloudPrefix, index);
+    const url = await resolveCloudURL(fileID);
     return new Promise((resolve, reject) => {
       wx.downloadFile({
-        url: `${gallery.remotePrefix}/layer_${index}.png`,
+        url,
         timeout: 60000,
         success: (res) => {
           if (res.statusCode !== 200) {
@@ -450,7 +454,7 @@ Page({
   _requestSplitColors(imageBase64) {
     return new Promise((resolve, reject) => {
       wx.request({
-        url: API_URL,
+        url: `${getApiBaseURL()}/api/split-colors`,
         method: 'POST',
         header: {
           'Content-Type': 'application/json'

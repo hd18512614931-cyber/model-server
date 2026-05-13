@@ -1,6 +1,7 @@
 const THREE = require('three-platformize')
 const WechatPlatformModule = require('three-platformize/src/WechatPlatform')
 const { GLTFLoader } = require('three-platformize/examples/jsm/loaders/GLTFLoader')
+const { resolveCloudURL } = require('../../utils/resolveCloudURL')
 
 const WechatPlatform = WechatPlatformModule.default || WechatPlatformModule.WechatPlatform || WechatPlatformModule
 
@@ -92,7 +93,7 @@ Page({
       });
   },
 
-  _loadModel() {
+  async _loadModel() {
     if (!this._modelUrl) {
       this._createDemoCube();
       return;
@@ -103,9 +104,21 @@ Page({
       return;
     }
 
+    let downloadUrl = this._modelUrl;
+    if (this._modelUrl.startsWith('cloud://')) {
+      try {
+        downloadUrl = await resolveCloudURL(this._modelUrl);
+      } catch (err) {
+        console.error('[3D] 获取云存储临时链接失败:', err);
+        wx.showToast({ title: '模型链接获取失败', icon: 'none' });
+        this._createDemoCube();
+        return;
+      }
+    }
+
     wx.showLoading({ title: '下载模型中...' });
     wx.downloadFile({
-      url: this._modelUrl,
+      url: downloadUrl,
       timeout: 60000,
       success: (res) => {
         wx.hideLoading();

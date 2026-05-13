@@ -1,8 +1,9 @@
 const fs = require('fs');
 const path = require('path');
+const http = require('http');
 const https = require('https');
 
-const API_URL = 'https://model-server-rosy.vercel.app/api/split-colors';
+const API_URL = process.env.SPLIT_API_URL || 'http://localhost:8000/api/split-colors';
 
 const IMAGES = [
   { id: 'nianhua-demo', file: 'images/nianhua-demo.jpg', title: '佛山木版年画示例' },
@@ -49,10 +50,12 @@ function callAPI(imageBase64) {
   return new Promise((resolve, reject) => {
     const postData = JSON.stringify({ imageBase64, imageUrl: imageBase64 });
     const url = new URL(API_URL);
+    const client = url.protocol === 'http:' ? http : https;
 
     const options = {
       hostname: url.hostname,
-      path: url.pathname,
+      port: url.port || (url.protocol === 'http:' ? 80 : 443),
+      path: url.pathname + url.search,
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -61,7 +64,7 @@ function callAPI(imageBase64) {
       timeout: 120000
     };
 
-    const req = https.request(options, (res) => {
+    const req = client.request(options, (res) => {
       let data = '';
       res.on('data', chunk => data += chunk);
       res.on('end', () => {

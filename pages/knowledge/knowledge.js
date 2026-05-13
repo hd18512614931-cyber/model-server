@@ -1,6 +1,8 @@
+const { IMAGES, VIDEOS } = require('../../constants/cloudAssets');
+
 Page({
   data: {
-    baseUrl: 'https://model-server-rosy.vercel.app/knowledge',
+    IMAGES,
 
     timeline: [
       { year: '明·永乐', title: '起源', desc: '佛山木版年画起源于明代永乐年间，距今600余年。最初以民间神像画为主，用于岁末祈福。', expanded: false },
@@ -22,12 +24,12 @@ Page({
     animatingIndex: -1,
 
     cards: [
-      { image: 'baxian.jpg', title: '八仙过海', desc: '八仙各显神通渡海，寄托百姓对美好生活的向往。', category: '神话传说', flipped: false },
-      { image: 'swordsman-woodblock.jpg', title: '武将门神', desc: '威武将军守护家宅平安，驱邪避凶。', category: '门神类', flipped: false },
-      { image: 'carving-detail.jpg', title: '雕版技艺', desc: '梨木枣木质硬细腻，一块线版需数周雕刻。', category: '核心技艺', flipped: false },
-      { image: 'coloring-closeup.jpg', title: '上色工艺', desc: '精准控制颜料浓度，确保每版套印色彩均匀。', category: '制作工艺', flipped: false },
-      { image: 'drying-prints.jpg', title: '晾晒工序', desc: '每套一版都需充分晾晒，整面墙挂满年画最为壮观。', category: '制作工艺', flipped: false },
-      { image: 'light-on-woodblock.jpg', title: '木版之美', desc: '光影下木版纹理与刀痕交织，记录匠人心血与传承。', category: '文化之美', flipped: false }
+      { image: IMAGES.baxian, title: '八仙过海', desc: '八仙各显神通渡海，寄托百姓对美好生活的向往。', category: '神话传说', flipped: false },
+      { image: IMAGES.swordDanceFront, title: '武将门神', desc: '威武将军守护家宅平安，驱邪避凶。', category: '门神类', flipped: false },
+      { image: IMAGES.carvingHD, title: '雕版技艺', desc: '梨木枣木质硬细腻，一块线版需数周雕刻。', category: '核心技艺', flipped: false },
+      { image: IMAGES.coloringCloseup, title: '上色工艺', desc: '精准控制颜料浓度，确保每版套印色彩均匀。', category: '制作工艺', flipped: false },
+      { image: IMAGES.drying, title: '晾晒工序', desc: '每套一版都需充分晾晒，整面墙挂满年画最为壮观。', category: '制作工艺', flipped: false },
+      { image: IMAGES.lightOnBoard, title: '木版之美', desc: '光影下木版纹理与刀痕交织，记录匠人心血与传承。', category: '文化之美', flipped: false }
     ],
 
     quiz: [
@@ -57,8 +59,8 @@ Page({
     showExplanation: false,
 
     videos: [
-      { src: 'nianhua-making.mp4', title: '木版年画制作工艺', poster: 'coloring-closeup.jpg' },
-      { src: 'nianhua-story.mp4', title: '年画故事与传承', poster: 'baxian.jpg' }
+      { src: VIDEOS.making, title: '木版年画制作工艺', poster: IMAGES.coloringCloseup },
+      { src: VIDEOS.story, title: '年画故事与传承', poster: IMAGES.baxian }
     ]
   },
 

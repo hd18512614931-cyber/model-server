@@ -1,11 +1,12 @@
 const app = getApp();
+const { MODELS } = require('../../constants/cloudAssets');
+
 const MODEL_HISTORY_KEY = 'modelHistory';
-const MODEL_BASE_URL = 'https://model-server-rosy.vercel.app/models/';
 const MAX_USER_MODELS = 5;
 const PRESET_MODELS = [
-  { id: 'preset_ai_generated', name: 'AI 生成模型', file: 'ai-generated.glb', emoji: '', color: '#D4A849' },
-  { id: 'preset_house', name: '木板展示 · 壹', file: 'house.glb', emoji: '', color: '#87CEEB' },
-  { id: 'preset_chman', name: '木板展示 · 贰', file: 'chman.glb', emoji: '', color: '#DDA0DD' }
+  { id: 'preset_ai_generated', name: 'AI 生成模型', fileID: MODELS.aiGenerated, emoji: '', color: '#D4A849' },
+  { id: 'preset_house', name: '木板展示 · 壹', fileID: MODELS.house, emoji: '', color: '#87CEEB' },
+  { id: 'preset_chman', name: '木板展示 · 贰', fileID: MODELS.chman, emoji: '', color: '#DDA0DD' }
 ];
 
 Page({
@@ -46,9 +47,9 @@ Page({
       return;
     }
 
-    wx.navigateTo({
-      url: '/pages/model3d-viewer/model3d-viewer?url=' + encodeURIComponent(MODEL_BASE_URL + item.file) + '&name=' + encodeURIComponent(item.name)
-    });
+    app.globalData._pendingModelUrl = item.fileID;
+    app.globalData._pendingModelName = item.name;
+    wx.navigateTo({ url: '/pages/model3d-viewer/model3d-viewer' });
   },
 
   _getValidUserModels() {
