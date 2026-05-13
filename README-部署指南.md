@@ -1,58 +1,37 @@
-# 部署指南
+# 静态资源同步指南
 
-## A. Vercel 部署步骤
+## A. 静态资源目录
 
-1. 注册 Vercel（vercel.com），用 GitHub 账号登录
-2. 在 GitHub 新建仓库（如 `model-server`），把 `model-server/` 目录推送上去：
-   ```bash
-   cd model-server
-   git init
-   git add .
-   git commit -m "init model-server"
-   git remote add origin https://github.com/你的用户名/model-server.git
-   git push -u origin main
-   ```
-3. 在 Vercel 控制台点击 **Import Project**，选择刚才的仓库，Framework 选 **Other**
-4. 进入项目 **Settings → Environment Variables**，添加：
-   - Key: `ARK_API_KEY`
-   - Value: 你的火山方舟 API Key（去 [火山方舟控制台](https://console.volcengine.com/ark) 获取）
-5. 部署完成后会得到域名，如 `https://model-server-xxx.vercel.app`
-6. 把域名替换到小程序 `app.js` 的 `serverBase` 中
+`public/` 会通过 GitHub Actions 同步到微信云开发底层 COS：
 
-## B. 上传 .glb 模型文件
+- `public/model/`：GLB 3D 模型
+- `public/knowledge/`：知识科普页图片和视频
+- `public/layers/`：首页和分色展厅的分层图资源
 
-1. 把 `.glb` 文件放到 `model-server/public/models/` 目录
-2. 文件名不要有中文和空格（如 `bread.glb`、`fulushou.glb`）
-3. `git add . && git commit -m "add models" && git push`，Vercel 自动部署
-4. 访问 `https://你的域名.vercel.app/models/bread.glb` 验证是否能下载
+## B. GitHub Actions 配置
 
-## C. 测试 Seed3D API
+仓库需要配置以下 GitHub Secrets：
 
-部署完成后，用 curl 测试：
+- `TCLOUD_API_ID`：腾讯云 SecretId
+- `TCLOUD_API_KEY`：腾讯云 SecretKey
 
-```bash
-curl -X POST https://你的域名.vercel.app/api/generate-3d \
-  -H "Content-Type: application/json" \
-  -d '{"imageUrl":"https://ark-project.tos-cn-beijing.volces.com/doc_image/i23d_flower.jpeg"}'
-```
+推送到 `main` 后，`.github/workflows/sync-to-cos.yml` 会自动同步 `public/` 下的静态资源。
 
-应该返回：`{ "success": true, "taskId": "xxx", "status": "queued" }`
+## C. 小程序引用方式
 
-然后查询任务状态：
+小程序端不要写临时 HTTPS 地址，统一使用微信云开发 FileID：
 
-```bash
-curl "https://你的域名.vercel.app/api/task-status?taskId=上面返回的taskId"
-```
+`cloud://cloudbase-d2ga3dspk593e200b.636c-cloudbase-d2ga3dspk593e200b-1424774211/<path>`
 
-## D. 小程序域名白名单
+其中 `<path>` 与 `public/` 下的相对路径一致，例如：
 
-开发阶段：在微信开发者工具中勾选「不校验合法域名」即可。
+- `public/model/house.glb` -> `model/house.glb`
+- `public/knowledge/八仙过海图.jpg` -> `knowledge/八仙过海图.jpg`
+- `public/layers/logo-demo/layer_0.png` -> `layers/logo-demo/layer_0.png`
 
-上线前：在微信公众平台后台 → 开发管理 → 服务器域名 → request 合法域名中添加：
-- `https://你的域名.vercel.app`
+## D. API 说明
 
-## 注意事项
+`api/` 下的 3D 生成接口仍依赖火山方舟服务，不属于静态资源同步范围。API 部署和 `ARK_API_KEY` 配置需单独处理。
 
-- API Key 只存在 Vercel 环境变量中，代码里通过 `process.env.ARK_API_KEY` 读取，绝不硬编码
-- Seed3D 生成的文件格式用 glb（不是 obj），因为小程序 WebGL 查看器用的是 glb
-- 如果 Seed3D 返回的 content 结构和代码中解析的不一致，查看 `task-status` 接口返回的 `_rawContent` 字段调试
+- 不要把 SecretId、SecretKey、ARK_API_KEY 写入代码。
+- 如果 COS region 不是 `ap-shanghai`，同步 workflow 里的 `-r` 需要对应调整。

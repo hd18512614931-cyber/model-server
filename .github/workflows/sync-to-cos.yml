@@ -1,0 +1,41 @@
+name: Sync static assets to Tencent COS
+
+on:
+  push:
+    paths:
+      - 'public/**'
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Install coscmd
+        run: pip install coscmd
+
+      - name: Configure coscmd
+        run: |
+          coscmd config \
+            -a ${{ secrets.TCLOUD_API_ID }} \
+            -s ${{ secrets.TCLOUD_API_KEY }} \
+            -b 636c-cloudbase-d2ga3dspk593e200b-1424774211 \
+            -r ap-shanghai
+
+      - name: Sync public/ to COS root
+        run: |
+          coscmd upload -rs --delete -f ./public/model/ model/
+          coscmd upload -rs --delete -f ./public/knowledge/ knowledge/
+          coscmd upload -rs --delete -f ./public/layers/ layers/
+
+      - name: Print summary
+        run: echo "Static assets synced to COS"

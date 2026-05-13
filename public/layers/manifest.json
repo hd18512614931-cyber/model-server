@@ -5,31 +5,31 @@
     "layers": [
       {
         "index": 0,
-        "file": "images/layers/nianhua-demo/layer_0.png",
+        "file": "layers/nianhua-demo/layer_0.png",
         "color": "#1a1a1a",
         "label": "墨线稿"
       },
       {
         "index": 1,
-        "file": "images/layers/nianhua-demo/layer_1.png",
+        "file": "layers/nianhua-demo/layer_1.png",
         "color": "#cc2936",
         "label": "大红"
       },
       {
         "index": 2,
-        "file": "images/layers/nianhua-demo/layer_2.png",
+        "file": "layers/nianhua-demo/layer_2.png",
         "color": "#2d6a4f",
         "label": "翠绿"
       },
       {
         "index": 3,
-        "file": "images/layers/nianhua-demo/layer_3.png",
+        "file": "layers/nianhua-demo/layer_3.png",
         "color": "#e6a817",
         "label": "橙黄"
       },
       {
         "index": 4,
-        "file": "images/layers/nianhua-demo/layer_4.png",
+        "file": "layers/nianhua-demo/layer_4.png",
         "color": "#e8b4a2",
         "label": "肉粉"
       }
@@ -41,31 +41,31 @@
     "layers": [
       {
         "index": 0,
-        "file": "images/layers/longtou/layer_0.png",
+        "file": "layers/longtou/layer_0.png",
         "color": "#1a1a1a",
         "label": "墨线稿"
       },
       {
         "index": 1,
-        "file": "images/layers/longtou/layer_1.png",
+        "file": "layers/longtou/layer_1.png",
         "color": "#cc2936",
         "label": "大红"
       },
       {
         "index": 2,
-        "file": "images/layers/longtou/layer_2.png",
+        "file": "layers/longtou/layer_2.png",
         "color": "#2d6a4f",
         "label": "翠绿"
       },
       {
         "index": 3,
-        "file": "images/layers/longtou/layer_3.png",
+        "file": "layers/longtou/layer_3.png",
         "color": "#e6a817",
         "label": "橙黄"
       },
       {
         "index": 4,
-        "file": "images/layers/longtou/layer_4.png",
+        "file": "layers/longtou/layer_4.png",
         "color": "#e8b4a2",
         "label": "肉粉"
       }
