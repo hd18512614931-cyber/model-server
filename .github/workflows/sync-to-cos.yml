@@ -26,8 +26,8 @@ jobs:
       - name: Configure coscmd
         run: |
           coscmd config \
-            -a ${{ secrets.TCLOUD_API_ID }} \
-            -s ${{ secrets.TCLOUD_API_KEY }} \
+            -a ${{ secrets.TENCENT_SECRET_ID }} \
+            -s ${{ secrets.TENCENT_SECRET_KEY }} \
             -b 636c-cloudbase-d2ga3dspk593e200b-1424774211 \
             -r ap-shanghai
 
