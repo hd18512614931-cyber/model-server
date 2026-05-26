@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="675" viewBox="0 0 1200 675" role="img" aria-labelledby="title desc">
+  <title id="title">视频封面占位</title>
+  <desc id="desc">README 视频封面占位图，请替换为真实视频封面。</desc>
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#111827"/>
+      <stop offset="100%" stop-color="#374151"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="675" fill="url(#bg)"/>
+  <circle cx="600" cy="337.5" r="84" fill="#f9fafb" opacity="0.92"/>
+  <polygon points="575,292 575,383 650,337.5" fill="#111827"/>
+  <g fill="#f9fafb" font-family="Arial, PingFang SC, Microsoft YaHei, sans-serif" text-anchor="middle">
+    <text x="600" y="470" font-size="44" font-weight="700">视频介绍（占位）</text>
+    <text x="600" y="525" font-size="26">上传视频后替换封面并更新链接</text>
+  </g>
+</svg>

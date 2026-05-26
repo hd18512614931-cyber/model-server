@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="675" viewBox="0 0 1200 675" role="img" aria-labelledby="title desc">
+  <title id="title">项目示意图占位</title>
+  <desc id="desc">README 图片占位图，请替换为真实项目截图。</desc>
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#f3f4f6"/>
+      <stop offset="100%" stop-color="#e5e7eb"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="675" fill="url(#bg)"/>
+  <g fill="#374151" font-family="Arial, PingFang SC, Microsoft YaHei, sans-serif" text-anchor="middle">
+    <text x="600" y="320" font-size="48" font-weight="700">项目示意图（占位）</text>
+    <text x="600" y="380" font-size="28">请将此文件替换为真实截图</text>
+  </g>
+</svg>

@@ -41,7 +41,7 @@ model-server/
 
 将图片放到仓库后，按相对路径引用：
 
-![项目示意图](./docs/images/demo.png)
+![项目示意图](./docs/images/demo.svg)
 
 > 提示：如图片路径暂未创建，先按你的实际路径替换即可。
 
@@ -49,7 +49,7 @@ model-server/
 
 视频上传后，把链接替换到下面：
 
-[![视频介绍封面](./docs/images/video-cover.png)](https://example.com/your-video-link)
+[![视频介绍封面](./docs/images/video-cover.svg)](https://example.com/your-video-link)
 
 > 提示：推荐用封面图 + 外链视频的方式，仓库首页展示更稳定。
 
