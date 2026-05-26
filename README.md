@@ -49,7 +49,7 @@ model-server/
 
 视频上传后，把链接替换到下面：
 
-[![视频介绍封面](./docs/images/video-cover.svg)](https://example.com/your-video-link)
+[![视频介绍封面](./docs/images/video-cover.svg)](https://your-video-hosting-site.com/your-video)
 
 > 提示：推荐用封面图 + 外链视频的方式，仓库首页展示更稳定。
 
