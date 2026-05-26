@@ -986,5 +986,13 @@ Page({
 
   goTo2D() {
     wx.navigateTo({ url: '/pages/exploded-view/exploded-view' });
+  },
+
+  goToAiGenerate() {
+    wx.navigateTo({ url: '/pages/ai-create/ai-create' });
+  },
+
+  goToAiHome() {
+    wx.navigateTo({ url: '/pages/index/index' });
   }
 });

@@ -425,6 +425,20 @@
             <text class="explore-card-title">2D 展厅</text>
             <text class="explore-card-hint">分色 · 拆解 · 对比</text>
           </view>
+
+          <view class="explore-card explore-ai-generate" bindtap="goToAiGenerate">
+            <image class="explore-card-bg" src="{{IMAGES.boardDisplay}}" mode="aspectFill"></image>
+            <view class="explore-card-mask"></view>
+            <text class="explore-card-title">AI 生图</text>
+            <text class="explore-card-hint">输入主题 · 生成年画</text>
+          </view>
+
+          <view class="explore-card explore-ai-home" bindtap="goToAiHome">
+            <image class="explore-card-bg" src="{{IMAGES.coloringCloseup}}" mode="aspectFill"></image>
+            <view class="explore-card-mask"></view>
+            <text class="explore-card-title">AI 二创主页</text>
+            <text class="explore-card-hint">创作 · 分色 · 开发中</text>
+          </view>
         </view>
       </view>
     </swiper-item>
@@ -520,6 +534,9 @@
           object-fit="contain"
           class="era-modal-video"
         ></video>
+      </view>
+      <view wx:if="{{eraDetail.isLast}}" class="era-modal-btn" bindtap="goToAiGenerate">
+        <text>体验 AI 生图 →</text>
       </view>
     </view>
   </view>
