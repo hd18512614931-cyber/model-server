@@ -23,7 +23,12 @@ const IMAGES = {
 
 const LAYERS = {
   manifest: `${CLOUD_BASE}/layers/manifest.json`,
-  logoDemoOriginal: `${CLOUD_BASE}/layers/logo-demo/original.jpg`
+  logoDemoOriginal: `${CLOUD_BASE}/layers/logo-demo/original.jpg`,
+  logoDemoCleanBlack: `${CLOUD_BASE}/layers/logo-demo-clean/black.png`,
+  logoDemoCleanRed: `${CLOUD_BASE}/layers/logo-demo-clean/red.png`,
+  logoDemoCleanYellow: `${CLOUD_BASE}/layers/logo-demo-clean/yellow.png`,
+  logoDemoCleanDeepYellow: `${CLOUD_BASE}/layers/logo-demo-clean/deep_yellow.png`,
+  logoDemoCleanBlue: `${CLOUD_BASE}/layers/logo-demo-clean/blue.png`
 };
 
 const layerFileID = (galleryId, index) => `${CLOUD_BASE}/layers/${galleryId}/layer_${index}.png`;

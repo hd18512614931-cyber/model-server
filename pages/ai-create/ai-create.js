@@ -1,4 +1,6 @@
-const { getApiBaseURL } = require('../../utils/apiBaseURL');
+const { downloadFileToTemp } = require('./utils/downloadCloudFile');
+const { requestSplitColors } = require('./utils/splitColors');
+const { saveLayerImage } = require('./utils/saveLayerImage');
 
 const USER_CACHE_KEY = 'userColorLayers';
 const MAX_USER_RECORDS = 10;
@@ -7,6 +9,7 @@ Page({
   data: {
     inputText: '',
     generatedImageUrl: '',
+    generatedImageFileID: '',
     loading: false,
     splitLoading: false
   },
@@ -32,7 +35,7 @@ Page({
     const prompt = '请严格按照以下要求生成图片：'
       + '【风格】中国佛山木版年画，传统民间版画风格，绝对不要写实风格，绝对不要3D风格'
       + '【主题】' + inputText
-      + '【色彩】只使用5种以内的纯色（红、黄、绿、黑、白），每种颜色是纯色色块填充，禁止任何渐变色，禁止任何光影效果，禁止高光，禁止阴影，禁止半透明'
+      + '【色彩】只使用5种以内的纯色（红、黄、深黄、蓝、黑、白色背景），不要使用绿色。每种颜色是纯色色块填充，禁止任何渐变色，禁止任何光影效果，禁止高光，禁止阴影，禁止半透明'
       + '【线条】黑色粗线条勾勒轮廓，线条清晰粗犷，类似木刻版画的刀刻效果'
       + '【构图】白色纯净背景，主体居中，构图饱满，装饰性强'
       + '【技法】模仿木版套印工艺，每个区域都是单一纯色填充，色块之间边界清晰锐利，像是用不同颜色的木版分别印刷上去的效果'
@@ -40,17 +43,26 @@ Page({
 
     this.setData({
       loading: true,
-      generatedImageUrl: ''
+      generatedImageUrl: '',
+      generatedImageFileID: ''
     });
 
     wx.cloud.callFunction({
       name: 'generateImage-RA7PaB',
-      data: { prompt },
+      data: {
+        prompt,
+        model: 'hunyuan-image',
+        version: 'v1.9',
+        size: '1024x1024',
+        n: 1,
+        revise: false
+      },
       success: (res) => {
         const result = res.result || {};
-        if (result.success && result.imageUrl) {
+        if (result.success && (result.fileID || result.imageUrl)) {
           this.setData({
-            generatedImageUrl: result.imageUrl,
+            generatedImageUrl: result.imageUrl || result.fileID,
+            generatedImageFileID: result.fileID || '',
             loading: false
           });
           return;
@@ -86,9 +98,8 @@ Page({
     this.setData({ splitLoading: true });
 
     try {
-      const localImagePath = await this._downloadGeneratedImage(this.data.generatedImageUrl);
-      const imageBase64 = await this._readFileAsDataUrl(localImagePath);
-      const splitResult = await this._requestSplitColors(imageBase64);
+      const splitSource = await this._getSplitSource();
+      const splitResult = await this._requestSplitColors(splitSource);
       const record = await this._saveSplitLayers(splitResult.layers || []);
 
       if (!record) {
@@ -114,31 +125,17 @@ Page({
     }
   },
 
-  _downloadGeneratedImage(imageUrl) {
-    if (imageUrl.startsWith('cloud://')) {
-      return new Promise((resolve, reject) => {
-        wx.cloud.downloadFile({
-          fileID: imageUrl,
-          success: (res) => resolve(res.tempFilePath),
-          fail: reject
-        });
-      });
+  async _getSplitSource() {
+    if (this.data.generatedImageFileID) {
+      return this.data.generatedImageFileID;
     }
 
-    return new Promise((resolve, reject) => {
-      wx.downloadFile({
-        url: imageUrl,
-        timeout: 60000,
-        success: (res) => {
-          if (res.statusCode === 200) {
-            resolve(res.tempFilePath);
-            return;
-          }
-          reject(new Error('下载图片失败 HTTP ' + res.statusCode));
-        },
-        fail: reject
-      });
-    });
+    const localImagePath = await this._downloadGeneratedImage(this.data.generatedImageUrl);
+    return this._readFileAsDataUrl(localImagePath);
+  },
+
+  _downloadGeneratedImage(imageUrl) {
+    return downloadFileToTemp(imageUrl);
   },
 
   _readFileAsDataUrl(filePath) {
@@ -155,29 +152,7 @@ Page({
   },
 
   _requestSplitColors(imageBase64) {
-    return new Promise((resolve, reject) => {
-      wx.request({
-        url: `${getApiBaseURL()}/api/split-colors`,
-        method: 'POST',
-        header: {
-          'Content-Type': 'application/json'
-        },
-        data: {
-          image: imageBase64,
-          imageBase64,
-          imageUrl: imageBase64
-        },
-        timeout: 60000,
-        success: (res) => {
-          if (res.statusCode >= 200 && res.statusCode < 300 && res.data && res.data.success && Array.isArray(res.data.layers)) {
-            resolve(res.data);
-            return;
-          }
-          reject(new Error((res.data && res.data.error) || '分色接口请求失败'));
-        },
-        fail: reject
-      });
-    });
+    return requestSplitColors(imageBase64);
   },
 
   async _saveSplitLayers(layers) {
@@ -190,12 +165,10 @@ Page({
 
     for (let i = 0; i < layers.length; i++) {
       const layer = layers[i];
-      const data = layer.data || layer.base64 || '';
-      const base64Data = data.replace(/^data:image\/\w+;base64,/, '');
-      if (!base64Data) continue;
-
       const tempPath = `${wx.env.USER_DATA_PATH}/user_layer_${id}_${i}.png`;
-      fs.writeFileSync(tempPath, wx.base64ToArrayBuffer(base64Data), 'binary');
+      const saved = await saveLayerImage(layer, tempPath, fs);
+      if (!saved) continue;
+
       savedLayers.push({
         tempPath,
         color: layer.color || '',

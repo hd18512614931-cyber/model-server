@@ -1,17 +1,13 @@
-const { layerFileID } = require('../../constants/cloudAssets');
-const { resolveCloudURL } = require('../../utils/resolveCloudURL');
+const { LAYERS } = require('../../constants/cloudAssets');
+const { downloadCloudFile } = require('../../utils/downloadCloudFile');
 
-const HOME_LAYER_CACHE_KEY = 'homeLayersLogoDemoCloudV1';
+const HOME_LAYER_CACHE_KEY = 'homeLayersLogoDemoCloudV3';
 const HOME_LAYER_URLS = [
-  layerFileID('logo-demo', 8),
-  layerFileID('logo-demo', 7),
-  layerFileID('logo-demo', 6),
-  layerFileID('logo-demo', 5),
-  layerFileID('logo-demo', 4),
-  layerFileID('logo-demo', 3),
-  layerFileID('logo-demo', 2),
-  layerFileID('logo-demo', 1),
-  layerFileID('logo-demo', 0)
+  LAYERS.logoDemoCleanBlack,
+  LAYERS.logoDemoCleanRed,
+  LAYERS.logoDemoCleanYellow,
+  LAYERS.logoDemoCleanDeepYellow,
+  LAYERS.logoDemoCleanBlue
 ];
 
 function buildHomeLayers(paths) {
@@ -115,33 +111,16 @@ Page({
   },
 
   async _downloadHomeLayer(fileID, index) {
-    const url = await resolveCloudURL(fileID);
-    return new Promise((resolve, reject) => {
-      wx.downloadFile({
-        url,
-        timeout: 60000,
-        success: (res) => {
-          if (res.statusCode !== 200) {
-            reject(new Error('HTTP ' + res.statusCode));
-            return;
-          }
+    const tempPath = await downloadCloudFile(fileID);
+    const fs = wx.getFileSystemManager();
+    const ext = fileID.indexOf('.jpg') > -1 || fileID.indexOf('.jpeg') > -1 ? 'jpg' : 'png';
+    const savePath = `${wx.env.USER_DATA_PATH}/home_logo_demo_layer_${index}.${ext}`;
+    try {
+      fs.unlinkSync(savePath);
+    } catch (err) {}
 
-          const fs = wx.getFileSystemManager();
-          const savePath = `${wx.env.USER_DATA_PATH}/home_logo_demo_layer_${index}.png`;
-          try {
-            fs.unlinkSync(savePath);
-          } catch (err) {}
-
-          try {
-            fs.saveFileSync(res.tempFilePath, savePath);
-            resolve(savePath);
-          } catch (err) {
-            reject(err);
-          }
-        },
-        fail: reject
-      });
-    });
+    fs.saveFileSync(tempPath, savePath);
+    return savePath;
   },
 
   toggleExplode() {
