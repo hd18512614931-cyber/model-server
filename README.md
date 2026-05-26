@@ -4,10 +4,9 @@
 
 ## 视频展示
 
-<video controls width="720" src="./public/knowledge/nianhua-making.mp4">
-  您的浏览器不支持 video 标签，可直接下载观看：
-  <a href="./public/knowledge/nianhua-making.mp4">nianhua-making.mp4</a>
-</video>
+[![年画制作视频预览](./public/knowledge/年画晾晒图.jpg)](./public/knowledge/nianhua-making.mp4)
+
+- 点击上方预览图可播放/下载视频：[`nianhua-making.mp4`](./public/knowledge/nianhua-making.mp4)
 
 ## 主要目录
 
