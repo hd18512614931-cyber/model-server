@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1200" height="675" viewBox="0 0 1200 675" role="img" aria-labelledby="title desc">
-  <title id="title">视频封面占位</title>
-  <desc id="desc">README 视频封面占位图，请替换为真实视频封面。</desc>
+  <title id="title">Video Cover Placeholder / 视频封面占位</title>
+  <desc id="desc">README video cover placeholder, replace with a real video thumbnail. / README 视频封面占位图，请替换为真实视频封面。</desc>
   <defs>
     <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
       <stop offset="0%" stop-color="#111827"/>
