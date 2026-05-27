@@ -1,3 +1,11 @@
+
+
+https://github.com/user-attachments/assets/32489462-f95c-4a7f-8243-1b6f21877859
+
+
+
+https://github.com/user-attachments/assets/deee9084-b134-409f-93b5-197b00a64baf
+
 # 佛山木版年画 AI 创作微信小程序
 
 这是一个面向非遗数字化展示与互动体验的微信小程序项目。项目以佛山木版年画为主题，把 AI 图像生成、后端分色处理、五色套印交互和 2D/3D 展示结合起来，让用户可以从“生成一张年画”进一步看到它被拆分成不同色版后的叠印过程。
