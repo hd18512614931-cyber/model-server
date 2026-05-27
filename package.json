@@ -1,16 +1,11 @@
 {
-  "name": "foshan-nianhua-frontend",
+  "name": "model-server",
   "version": "1.0.0",
-  "description": "这是一个基于微信小程序原生框架开发的工具，旨在结合传统木版年画工艺与现代 AI 图像分割技术，允许用户上传照片并将其拆分为经典的版画套印的多色图层（如红、黄、绿、紫、黑线稿），最终合成一张具有中国传统春节意蕴的数字“佛山年画”。",
-  "main": "app.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "private": true,
+  "description": "佛山木版年画 AI 创作微信小程序与后端分色服务",
   "type": "commonjs",
   "dependencies": {
+    "sharp": "^0.34.5",
     "three-platformize": "^1.133.3"
   }
 }
