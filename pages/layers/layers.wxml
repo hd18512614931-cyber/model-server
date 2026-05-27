@@ -15,8 +15,8 @@
         <text class="top-action-icon">?</text>
       </view>
       <view class="top-action-btn primary" bindtap="togglePreviewMode">
-        <text class="top-action-icon">{{previewMode === 'stack' ? '⊞' : '⊟'}}</text>
-        <text class="top-action-label">{{previewMode === 'stack' ? '堆叠' : '并排'}}</text>
+        <text class="top-action-icon">{{previewModeIcon}}</text>
+        <text class="top-action-label">{{previewModeLabel}}</text>
       </view>
       <view class="top-action-btn" bindtap="toggleOpacityPanel">
         <text class="top-action-icon">◐</text>
@@ -54,11 +54,11 @@
       <image
         wx:for="{{layers}}"
         wx:key="index"
-        wx:if="{{layerVisibility[item.index] !== false}}"
+        wx:if="{{item.visible}}"
         class="stack-layer"
         src="{{item.tempPath}}"
         mode="aspectFit"
-        style="z-index: {{item.order}}; opacity: {{opacityValues[item.index] !== undefined ? opacityValues[item.index] : 1}};"
+        style="z-index: {{item.order}}; opacity: {{item.opacity}};"
       ></image>
       <view class="stack-label">
         <text class="stack-label-text">最终效果预览</text>
@@ -71,7 +71,7 @@
         <view
           wx:for="{{layers}}"
           wx:key="index"
-          class="grid-cell {{layerVisibility[item.index] === false ? 'cell-dimmed' : ''}}"
+          class="grid-cell {{item.hiddenClass}}"
         >
           <view class="cell-paper">
             <image
@@ -107,7 +107,7 @@
           backgroundColor="rgba(255,247,230,0.12)"
           block-size="16"
         ></slider>
-        <text class="opacity-value">{{(opacityValues[item.index] * 100).toFixed(0)}}%</text>
+        <text class="opacity-value">{{item.opacityPercent}}%</text>
       </view>
     </view>
   </view>
@@ -127,8 +127,8 @@
       <view
         wx:for="{{layers}}"
         wx:key="index"
-        class="layer-item {{layerVisibility[item.index] === false ? 'item-hidden' : ''}} {{draggingIndex === item.index ? 'item-dragging' : ''}}"
-        style="{{draggingIndex === item.index ? 'transform: translateY(' + dragTranslateY + 'px); z-index: 100;' : ''}}"
+        class="layer-item {{item.hiddenItemClass}} {{item.draggingClass}}"
+        style="{{item.dragStyle}}"
         data-index="{{item.index}}"
         bindtouchstart="onLayerTouchStart"
         bindtouchmove="onLayerTouchMove"
@@ -146,22 +146,22 @@
         <!-- 中间：小缩略图 -->
         <view class="item-thumb" bindtap="toggleLayer" data-index="{{item.index}}">
           <image
-            class="item-thumb-img {{layerVisibility[item.index] === false ? 'thumb-off' : ''}}"
+            class="item-thumb-img {{item.thumbClass}}"
             src="{{item.tempPath}}"
             mode="aspectFit"
           ></image>
-          <view class="thumb-status" wx:if="{{layerVisibility[item.index] === false}}">
+          <view class="thumb-status" wx:if="{{!item.visible}}">
             <text class="thumb-status-icon">⊗</text>
           </view>
         </view>
 
         <!-- 右侧：顺序操作 -->
         <view class="item-actions">
-          <view class="item-action-btn {{layers.indexOf(item) === 0 ? 'disabled' : ''}}" data-index="{{item.index}}" bindtap="moveLayerUp" catchtap="moveLayerUp">
+          <view class="item-action-btn {{item.upDisabledClass}}" data-index="{{item.index}}" bindtap="moveLayerUp" catchtap="moveLayerUp">
             <text class="item-action-icon">∧</text>
           </view>
           <text class="item-order-num">{{item.order}}</text>
-          <view class="item-action-btn {{layers.indexOf(item) === layers.length - 1 ? 'disabled' : ''}}" data-index="{{item.index}}" bindtap="moveLayerDown" catchtap="moveLayerDown">
+          <view class="item-action-btn {{item.downDisabledClass}}" data-index="{{item.index}}" bindtap="moveLayerDown" catchtap="moveLayerDown">
             <text class="item-action-icon">∨</text>
           </view>
         </view>

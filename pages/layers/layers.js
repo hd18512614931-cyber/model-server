@@ -19,6 +19,8 @@ Page({
     layerVisibility: {},
     // 预览模式：堆叠 / 并排
     previewMode: 'stack',
+    previewModeIcon: '⊞',
+    previewModeLabel: '堆叠',
     // 拖动重排序
     draggingIndex: -1,
     dragTranslateY: 0,
@@ -71,11 +73,48 @@ Page({
     });
 
     this.setData({
-      layers,
+      layers: this.decorateLayers(layers, visibility, opacities),
       layerVisibility: visibility,
       opacityValues: opacities,
       loading: false
     });
+  },
+
+  decorateLayers(layers, visibility, opacities, draggingIndex, dragTranslateY) {
+    const activeDraggingIndex = draggingIndex === undefined ? this.data.draggingIndex : draggingIndex;
+    const activeDragTranslateY = dragTranslateY === undefined ? this.data.dragTranslateY : dragTranslateY;
+    const lastIndex = layers.length - 1;
+
+    return layers.map((layer, position) => {
+      const visible = visibility[layer.index] !== false;
+      const opacity = opacities[layer.index] === undefined ? 1 : opacities[layer.index];
+      const dragging = activeDraggingIndex === layer.index;
+
+      return Object.assign({}, layer, {
+        visible,
+        opacity,
+        opacityPercent: Math.round(opacity * 100),
+        hiddenClass: visible ? '' : 'cell-dimmed',
+        hiddenItemClass: visible ? '' : 'item-hidden',
+        thumbClass: visible ? '' : 'thumb-off',
+        draggingClass: dragging ? 'item-dragging' : '',
+        dragStyle: dragging ? ('transform: translateY(' + activeDragTranslateY + 'px); z-index: 100;') : '',
+        upDisabledClass: position === 0 ? 'disabled' : '',
+        downDisabledClass: position === lastIndex ? 'disabled' : ''
+      });
+    });
+  },
+
+  refreshLayerView(nextData = {}) {
+    const layers = nextData.layers || this.data.layers;
+    const layerVisibility = nextData.layerVisibility || this.data.layerVisibility;
+    const opacityValues = nextData.opacityValues || this.data.opacityValues;
+    const draggingIndex = nextData.draggingIndex === undefined ? this.data.draggingIndex : nextData.draggingIndex;
+    const dragTranslateY = nextData.dragTranslateY === undefined ? this.data.dragTranslateY : nextData.dragTranslateY;
+
+    this.setData(Object.assign({}, nextData, {
+      layers: this.decorateLayers(layers, layerVisibility, opacityValues, draggingIndex, dragTranslateY)
+    }));
   },
 
   // ── 可见性切换 ──
@@ -85,7 +124,7 @@ Page({
     const current = { ...this.data.layerVisibility };
     current[index] = !current[index];
 
-    this.setData({ layerVisibility: current });
+    this.refreshLayerView({ layerVisibility: current });
     wx.vibrateShort({ type: 'light' });
 
     const layer = this.data.layers.find(l => l.index === index);
@@ -102,14 +141,14 @@ Page({
   showAll() {
     const visibility = {};
     this.data.layers.forEach(l => { visibility[l.index] = true; });
-    this.setData({ layerVisibility: visibility });
+    this.refreshLayerView({ layerVisibility: visibility });
     wx.vibrateShort({ type: 'light' });
   },
 
   hideAll() {
     const visibility = {};
     this.data.layers.forEach((l, i) => { visibility[l.index] = i === 0; });
-    this.setData({ layerVisibility: visibility });
+    this.refreshLayerView({ layerVisibility: visibility });
     wx.vibrateShort({ type: 'light' });
   },
 
@@ -117,7 +156,11 @@ Page({
 
   togglePreviewMode() {
     const mode = this.data.previewMode === 'stack' ? 'grid' : 'stack';
-    this.setData({ previewMode: mode });
+    this.setData({
+      previewMode: mode,
+      previewModeIcon: mode === 'stack' ? '⊞' : '⊟',
+      previewModeLabel: mode === 'stack' ? '堆叠' : '并排'
+    });
     wx.vibrateShort({ type: 'light' });
   },
 
@@ -133,7 +176,7 @@ Page({
     const value = parseInt(e.detail.value) / 100;
     const opacities = { ...this.data.opacityValues };
     opacities[index] = value;
-    this.setData({ opacityValues: opacities });
+    this.refreshLayerView({ opacityValues: opacities });
   },
 
   // ── 图层顺序管理 ──
@@ -149,7 +192,7 @@ Page({
     // 更新 order 属性
     layers.forEach((layer, i) => { layer.order = i + 1; });
 
-    this.setData({ layers });
+    this.refreshLayerView({ layers });
     wx.vibrateShort({ type: 'light' });
   },
 
@@ -162,7 +205,7 @@ Page({
     [layers[pos], layers[pos + 1]] = [layers[pos + 1], layers[pos]];
     layers.forEach((layer, i) => { layer.order = i + 1; });
 
-    this.setData({ layers });
+    this.refreshLayerView({ layers });
     wx.vibrateShort({ type: 'light' });
   },
 
@@ -174,7 +217,7 @@ Page({
     this._dragStartY = touchY;
     this._dragIndex = index;
     this._dragTimer = setTimeout(() => {
-      this.setData({ draggingIndex: index });
+      this.refreshLayerView({ draggingIndex: index });
     }, 300);
   },
 
@@ -186,7 +229,7 @@ Page({
 
     const currentY = e.touches[0].clientY;
     const deltaY = currentY - this._dragStartY;
-    this.setData({ dragTranslateY: deltaY });
+    this.refreshLayerView({ dragTranslateY: deltaY });
   },
 
   onLayerTouchEnd() {
@@ -207,12 +250,12 @@ Page({
           const [moved] = layers.splice(fromPos, 1);
           layers.splice(toPos, 0, moved);
           layers.forEach((layer, i) => { layer.order = i + 1; });
-          this.setData({ layers });
+          this.refreshLayerView({ layers });
         }
       }
     }
 
-    this.setData({
+    this.refreshLayerView({
       draggingIndex: -1,
       dragTranslateY: 0
     });

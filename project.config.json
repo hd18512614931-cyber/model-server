@@ -72,11 +72,19 @@
       },
       {
         "type": "folder",
+        "value": "public"
+      },
+      {
+        "type": "folder",
         "value": "miniprogram_npm/three-platformize"
       },
       {
         "type": "folder",
         "value": "miniprogram_npm/threejs-miniprogram"
+      },
+      {
+        "type": "file",
+        "value": "pages/model3d-viewer/vendor/three-platformize/index.js"
       },
       {
         "type": "folder",
