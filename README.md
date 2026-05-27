@@ -1,10 +1,10 @@
 
 
-https://github.com/user-attachments/assets/32489462-f95c-4a7f-8243-1b6f21877859
 
 
 
-https://github.com/user-attachments/assets/deee9084-b134-409f-93b5-197b00a64baf
+
+
 
 # 佛山木版年画 AI 创作微信小程序
 
@@ -14,8 +14,8 @@ https://github.com/user-attachments/assets/deee9084-b134-409f-93b5-197b00a64baf
 
 
 https://github.com/user-attachments/assets/fe38bd64-449a-4ddb-baea-47126fa811b0
-
-
+https://github.com/user-attachments/assets/deee9084-b134-409f-93b5-197b00a64baf
+https://github.com/user-attachments/assets/32489462-f95c-4a7f-8243-1b6f21877859
 ## 项目定位
 
 项目的核心目标不是只做一个展示页，而是把传统木版年画的“分版、上色、套印”过程做成可交互、可解释、可演示的数字体验。它既可以作为非遗传播作品，也可以作为我在实习面试中展示工程能力、AI 应用落地能力和 CI/CD 实践经验的项目。
@@ -91,19 +91,11 @@ https://github.com/user-attachments/assets/fe38bd64-449a-4ddb-baea-47126fa811b0
 
 对用户来说，这个小程序把非遗内容从静态介绍变成了可操作的互动体验。用户不仅能看到佛山木版年画，也能理解它为什么是一版一版套印出来的。
 
-对工程实践来说，这个项目覆盖了小程序前端、云函数、云存储、AI 生成、图像分色、自动化 CI/CD 等多个环节，比较完整地体现了从功能开发到工程交付的能力。
-
-对面试展示来说，我可以围绕以下问题展开说明：
-
-- 如何把 AI 生成结果转化为可解释的多图层数据？
-- 如何设计后端分色逻辑，减少不同颜色之间的串色？
-- 如何在小程序端高效展示透明图层叠加效果？
-- 如何用 GitHub Actions 管理小程序项目的自动化检查和发布？
-- 如何用 CloudBase 承接云函数、云存储和小程序访问链路？
+对工程实践来说，这个项目覆盖了小程序前端、云函数、云存储、AI 生成、图像分色、自动化 CI/CD 、mcp调用等多个环节，比较完整地体现了从功能开发到工程交付的能力。
 
 ## 后续计划
 
 - 小程序正式上线后，在 README 中补充小程序码和体验链接。
 - 持续优化分色算法，让边缘、文字和复杂纹样分层更干净。
-- 完善 GitHub Actions 的预览二维码产物和正式版本上传流程。
-- 增加更多佛山木版年画素材、工艺说明和可交互展示内容。
+- 增加更多佛山木版年画素材、工艺说明
+- 更加有趣味性的可交互展示内容。
