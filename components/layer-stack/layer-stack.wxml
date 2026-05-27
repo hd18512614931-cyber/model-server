@@ -1,0 +1,14 @@
+<view class="layer-stack-container" style="width: {{width}}rpx; height: {{height}}rpx;">
+  <!-- 兼容处理：支持 image/url, visible/active, zIndex/order -->
+  <image 
+    wx:for="{{layers}}" 
+    wx:key="name"
+    src="{{item.image || item.url}}" 
+    class="layer-image {{(item.visible === false || item.active === false) ? 'hidden' : ''}}" 
+    style="z-index: {{item.zIndex || item.order}}"
+    mode="aspectFit"
+    bindtap="onLayerTap"
+    data-item="{{item}}"
+    data-index="{{index}}"
+  ></image>
+</view>

@@ -1,0 +1,53 @@
+<view class="exploded-page">
+  <view class="back-btn" bindtap="goBack">
+    <text class="back-icon">←</text>
+  </view>
+
+  <view class="float-title">
+    <text>佛山木版年画 · 五色套印</text>
+  </view>
+
+  <view class="loading-panel" wx:if="{{loading}}">
+    <view class="loading-ring"></view>
+    <text class="loading-text">正在分析色层...（{{loadingProgress}}）</text>
+  </view>
+
+  <view
+    class="stage-wrapper {{slideDirection}}"
+    wx:if="{{layers.length > 0}}"
+    bindtouchstart="onTouchStart"
+    bindtouchmove="onTouchMove"
+    bindtouchend="onTouchEnd"
+  >
+    <view class="stage" bindtap="toggleExplode">
+      <view
+        class="layers-container"
+        style="transform: rotateX({{rotateX}}deg) rotateZ({{rotateZ}}deg) scale({{scale}});"
+      >
+        <view
+          class="paper-backdrop"
+          style="transform: {{isExploded ? 'translateZ(-240px) translateY(96px)' : 'translateZ(0px) translateY(0px)'}};"
+        ></view>
+        <image
+          wx:for="{{layers}}"
+          wx:key="index"
+          class="layer"
+          src="{{item.tempPath}}"
+          mode="aspectFit"
+          style="{{item.layerStyle}}"
+        ></image>
+      </view>
+    </view>
+  </view>
+
+  <view class="arrow-btn arrow-left" wx:if="{{!loading && currentIndex > 0}}" bindtap="prevItem">
+    <text class="arrow-icon">‹</text>
+  </view>
+  <view class="arrow-btn arrow-right" wx:if="{{!loading && currentIndex < colorLayersList.length - 1}}" bindtap="nextItem">
+    <text class="arrow-icon">›</text>
+  </view>
+
+  <view class="page-indicator" wx:if="{{!loading && colorLayersList.length > 0}}">
+    <text class="indicator-text">{{currentIndex + 1}} / {{colorLayersList.length}}</text>
+  </view>
+</view>

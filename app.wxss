@@ -1,0 +1,53 @@
+/* 全局变量定义 */
+page {
+  --primary-color: #C41E3A; /* 中国红 */
+  --gold-color: #D4A849;    /* 年画金 */
+  --bg-color: #F8F8F8;
+  --text-main: #333333;
+  --text-sub: #666666;
+}
+
+/* 基础 reset 样式 */
+page, view, text, swiper, swiper-item, image, navigator {
+  box-sizing: border-box;
+  padding: 0;
+  margin: 0;
+}
+
+page {
+  background-color: var(--bg-color);
+  font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Helvetica,
+    Segoe UI, Arial, Roboto, 'PingFang SC', 'miui', 'Hiragino Sans GB', 'Microsoft Yahei',
+    sans-serif;
+  color: var(--text-main);
+  font-size: 28rpx;
+}
+
+/* 常用 flex 布局类 */
+.flex-row {
+  display: flex;
+  flex-direction: row;
+}
+
+.flex-col {
+  display: flex;
+  flex-direction: column;
+}
+
+.flex-center {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.flex-between {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.flex-around {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+}

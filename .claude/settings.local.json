@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(mkdir -p \"C:\\\\Users\\\\Lenovo\\\\foshan-nianhua-backend\\\\model-server\\\\api\")",
+      "Bash(mkdir -p \"C:\\\\Users\\\\Lenovo\\\\foshan-nianhua-backend\\\\model-server\\\\public\\\\models\")",
+      "Bash(git -C ~/foshan-nianhua-backend/foshan-nianhua-frontend log --oneline -3)",
+      "Bash(npm init *)",
+      "Bash(npm install *)"
+    ]
+  }
+}

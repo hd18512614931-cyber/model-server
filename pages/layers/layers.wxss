@@ -1,0 +1,29 @@
+page {
+  background: #0f0c0b;
+}
+
+.dev-page {
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.dev-icon {
+  font-size: 120rpx;
+  margin-bottom: 40rpx;
+}
+
+.dev-title {
+  color: #F8E5A9;
+  font-size: 36rpx;
+  font-weight: 700;
+  margin-bottom: 20rpx;
+}
+
+.dev-desc {
+  color: rgba(255, 255, 255, 0.4);
+  font-size: 26rpx;
+}

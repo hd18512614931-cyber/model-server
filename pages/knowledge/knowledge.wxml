@@ -1,0 +1,172 @@
+<scroll-view scroll-y class="page">
+  <!-- 模块 A：Banner -->
+  <view class="banner">
+    <image src="{{IMAGES.boardDisplay}}" mode="aspectFill" class="banner-img" lazy-load />
+    <view class="banner-overlay">
+      <text class="banner-title">佛山木版年画</text>
+      <text class="banner-subtitle">国家级非物质文化遗产 · 岭南民间艺术瑰宝</text>
+    </view>
+  </view>
+
+  <!-- 模块 B：横向滑动时间线 -->
+  <view class="section">
+    <text class="section-title">历史长河</text>
+    <text class="section-hint">← 滑动探索 · 点击展开 →</text>
+    <scroll-view scroll-x class="timeline-scroll" enhanced show-scrollbar="{{false}}">
+      <view class="timeline-track">
+        <view class="timeline-line"></view>
+        <view
+          wx:for="{{timeline}}"
+          wx:key="index"
+          class="timeline-node {{item.expanded ? 'expanded' : ''}}"
+          data-index="{{index}}"
+          bindtap="toggleTimeline"
+        >
+          <view class="node-dot"></view>
+          <view class="node-year">{{item.year}}</view>
+          <view class="node-title">{{item.title}}</view>
+          <view class="node-desc" wx:if="{{item.expanded}}">{{item.desc}}</view>
+        </view>
+      </view>
+    </scroll-view>
+  </view>
+
+  <!-- 模块 C：五色套印 -->
+  <view class="section">
+    <text class="section-title">五色套印 · 工艺解密</text>
+
+    <view class="color-dots">
+      <view
+        wx:for="{{colors}}"
+        wx:key="index"
+        class="color-dot {{activeColor === index ? 'active' : ''}} {{animatingIndex === index ? 'animating' : ''}}"
+        style="background-color: {{item.color}};"
+        data-index="{{index}}"
+        bindtap="selectColor"
+      >
+        <text class="dot-order" style="color: {{item.textColor}};">{{item.order}}</text>
+      </view>
+    </view>
+
+    <view class="play-btn {{isAnimating ? 'disabled' : ''}}" bindtap="playColorSequence">
+      <text>{{isAnimating ? '演示中...' : '▶ 演示套印顺序'}}</text>
+    </view>
+
+    <view wx:if="{{isAnimating && animatingIndex >= 0 && animatingIndex < colors.length}}" class="step-hint">
+      <text>第{{colors[animatingIndex].order}}步：印{{colors[animatingIndex].name}}</text>
+    </view>
+
+    <view wx:if="{{activeColor >= 0}}" class="color-detail" style="border-left: 8rpx solid {{colors[activeColor].color}};">
+      <view class="detail-header">
+        <text class="detail-name">{{colors[activeColor].name}}</text>
+        <text class="detail-meaning">{{colors[activeColor].meaning}}</text>
+      </view>
+      <view class="detail-row">
+        <text class="detail-label">颜料来源：</text>
+        <text>{{colors[activeColor].material}}</text>
+      </view>
+      <view class="detail-row">
+        <text class="detail-label">象征意义：</text>
+        <text>{{colors[activeColor].meaning}}</text>
+      </view>
+      <view class="detail-row">
+        <text class="detail-label">套印顺序：</text>
+        <text>第 {{colors[activeColor].order}} 版</text>
+      </view>
+      <text class="detail-desc">{{colors[activeColor].desc}}</text>
+    </view>
+
+    <image src="{{IMAGES.coloringCloseup}}" mode="widthFix" class="craft-image" lazy-load />
+    <text class="image-caption">▲ 匠人为木版上色</text>
+  </view>
+
+  <!-- 模块 D：年画图鉴翻卡 -->
+  <view class="section">
+    <text class="section-title">年画图鉴 · 点击翻转探索</text>
+    <view class="cards-grid">
+      <view
+        wx:for="{{cards}}"
+        wx:key="index"
+        class="card-container"
+        data-index="{{index}}"
+        bindtap="flipCard"
+      >
+        <view class="card-inner {{item.flipped ? 'flipped' : ''}}">
+          <view class="card-front">
+            <image src="{{item.image}}" mode="aspectFill" class="card-image" lazy-load />
+            <view class="card-label">
+              <text class="card-category">{{item.category}}</text>
+              <text class="card-title-small">{{item.title}}</text>
+            </view>
+          </view>
+          <view class="card-back">
+            <text class="card-back-title">{{item.title}}</text>
+            <text class="card-back-category">{{item.category}}</text>
+            <text class="card-back-desc">{{item.desc}}</text>
+            <text class="card-back-hint">点击翻回</text>
+          </view>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 模块 E：知识测验 -->
+  <view class="section">
+    <text class="section-title">考考你 · 木版年画知多少？</text>
+
+    <block wx:if="{{!quizFinished}}">
+      <text class="quiz-progress">第 {{currentQuestion + 1}} / {{quiz.length}} 题</text>
+      <text class="quiz-question">{{quiz[currentQuestion].question}}</text>
+
+      <view
+        wx:for="{{quiz[currentQuestion].options}}"
+        wx:key="index"
+        wx:for-item="option"
+        class="quiz-option {{showExplanation && index === quiz[currentQuestion].answer ? 'correct' : ''}} {{showExplanation && index === selectedOption && index !== quiz[currentQuestion].answer ? 'wrong' : ''}}"
+        data-index="{{index}}"
+        bindtap="selectQuizOption"
+      >
+        <text>{{option}}</text>
+      </view>
+
+      <view wx:if="{{showExplanation}}" class="quiz-explanation">
+        <text>{{quiz[currentQuestion].explanation}}</text>
+      </view>
+    </block>
+
+    <block wx:if="{{quizFinished}}">
+      <view class="quiz-result">
+        <text class="quiz-score">{{quizScore}} / {{quiz.length}}</text>
+        <text wx:if="{{quizScore === 3}}" class="quiz-msg">年画大师！你对佛山木版年画了如指掌！</text>
+        <text wx:elif="{{quizScore === 2}}" class="quiz-msg">不错！你已经对木版年画有了不少了解</text>
+        <text wx:elif="{{quizScore === 1}}" class="quiz-msg">继续探索吧，木版年画的世界很精彩！</text>
+        <text wx:else class="quiz-msg">没关系，翻到上面重新看看知识点吧～</text>
+        <view class="reset-btn" bindtap="resetQuiz">
+          <text>重新答题</text>
+        </view>
+      </view>
+    </block>
+  </view>
+
+  <!-- 模块 F：影像记录 -->
+  <view class="section">
+    <text class="section-title">影像记录</text>
+    <view
+      wx:for="{{videos}}"
+      wx:key="src"
+      class="video-card"
+    >
+      <text class="video-title">{{item.title}}</text>
+      <video
+        class="video-player"
+        src="{{item.src}}"
+        poster="{{item.poster}}"
+        controls
+        object-fit="cover"
+        show-center-play-btn
+      ></video>
+    </view>
+  </view>
+
+  <view style="height: 60rpx;"></view>
+</scroll-view>

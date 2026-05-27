@@ -1,0 +1,5 @@
+<view class="dev-page">
+  <view class="dev-icon"></view>
+  <text class="dev-title">功能开发中</text>
+  <text class="dev-desc">更多个人功能即将上线，敬请期待</text>
+</view>

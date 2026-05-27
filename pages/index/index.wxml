@@ -1,0 +1,40 @@
+<view class="immersive-container">
+  <!-- 3D展示区 -->
+  <view class="stage"
+        bindtouchstart="onStageTouchStart"
+        bindtouchmove="onStageTouchMove"
+        bindtouchend="onStageTouchEnd">
+    <view class="scene {{isExploded ? 'exploded' : ''}}"
+          style="transform: rotateX({{rotateX}}deg) rotateY({{rotateY}}deg) scale({{scale}});">
+      <block wx:for="{{layers}}" wx:key="id">
+        <image
+          src="{{item.url}}"
+          class="layer"
+          mode="aspectFit"
+          style="transform: translateZ({{isExploded ? item.zDist : 0}}rpx); z-index: {{item.order}};"
+        ></image>
+      </block>
+    </view>
+    <view class="loading-hint" wx:if="{{layersLoading}}">
+      <text style="color: rgba(255,255,255,0.6); font-size: 26rpx;">加载中...</text>
+    </view>
+    <view class="tap-hint" wx:if="{{!hasTapped && !layersLoading}}">点击画面体验套色层叠</view>
+  </view>
+
+  <!-- 底部功能入口 (悬浮) -->
+  <view class="floating-actions">
+    <view class="intro">
+      <text class="title">佛山木版年画</text>
+      <text class="subtitle">非遗传承 · AI焕新</text>
+    </view>
+
+    <button class="btn-create" bindtap="goToCreate">开始 AI 创作</button>
+
+    <view class="menu-row">
+      <view class="menu-btn" bindtap="goToExplodedView"><text>2D 分色展厅</text></view>
+      <view class="menu-btn" bindtap="goTo3D"><text>3D 展厅</text></view>
+      <view class="menu-btn" bindtap="goToKnowledge"><text class="menu-icon">📚</text><text>知识谱系</text></view>
+      <view class="menu-btn" bindtap="showToast" data-msg="文创商城开发中"><text>文创商城</text></view>
+    </view>
+  </view>
+</view>

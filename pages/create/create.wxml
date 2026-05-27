@@ -1,0 +1,37 @@
+<view class="create-page">
+  <view class="create-header">
+    <text class="create-title">AI 色彩分析</text>
+    <text class="create-subtitle">上传年画图片，AI自动分解五色套印层</text>
+  </view>
+
+  <!-- 上传区域 -->
+  <view class="upload-area" bindtap="chooseImage" wx:if="{{!previewImage}}">
+    <view class="upload-icon"></view>
+    <text class="upload-text">点击上传年画图片</text>
+    <text class="upload-hint">支持拍照或从相册选择</text>
+  </view>
+
+  <!-- 预览区域 -->
+  <view class="preview-area" wx:if="{{previewImage}}">
+    <image class="preview-img" src="{{previewImage}}" mode="aspectFit" />
+    <view class="preview-actions">
+      <view class="action-btn action-reselect" bindtap="chooseImage">
+        <text>重新选择</text>
+      </view>
+      <view class="action-btn action-analyze" bindtap="startAnalyze" wx:if="{{!analyzing}}">
+        <text>开始分色分析</text>
+      </view>
+      <view class="action-btn action-analyzing" wx:if="{{analyzing}}">
+        <view class="mini-loading"></view>
+        <text>{{analyzeText}}</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 历史记录入口 -->
+  <view class="history-entry" bindtap="goToExplodedView">
+    <text class="history-icon"></text>
+    <text class="history-text">查看 2D 分色展厅</text>
+    <text class="history-arrow">→</text>
+  </view>
+</view>

@@ -1,0 +1,129 @@
+page {
+  background: #17110d;
+}
+
+.ai-create-page {
+  min-height: 100vh;
+  padding: 72rpx 40rpx 48rpx;
+  box-sizing: border-box;
+  color: #fff1cf;
+}
+
+.header {
+  margin-bottom: 40rpx;
+}
+
+.title {
+  display: block;
+  font-size: 48rpx;
+  font-weight: 800;
+  letter-spacing: 0;
+}
+
+.subtitle {
+  display: block;
+  margin-top: 16rpx;
+  color: rgba(255, 241, 207, 0.62);
+  font-size: 24rpx;
+  line-height: 1.5;
+}
+
+.form-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 28rpx;
+}
+
+.prompt-input {
+  width: 100%;
+  min-height: 180rpx;
+  padding: 28rpx;
+  box-sizing: border-box;
+  border: 2rpx solid rgba(248, 229, 169, 0.24);
+  border-radius: 20rpx;
+  background: rgba(255, 241, 207, 0.06);
+  color: #fff1cf;
+  font-size: 28rpx;
+  line-height: 1.5;
+}
+
+.generate-btn,
+.primary-btn {
+  height: 92rpx;
+  line-height: 92rpx;
+  border-radius: 46rpx;
+  background: linear-gradient(135deg, #d9281c 0%, #a81712 100%);
+  color: #ffffff;
+  font-size: 30rpx;
+  font-weight: 700;
+  box-shadow: 0 10rpx 28rpx rgba(217, 40, 28, 0.32);
+}
+
+.loading-panel {
+  margin-top: 88rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 28rpx;
+}
+
+.loading-ring {
+  width: 72rpx;
+  height: 72rpx;
+  border: 6rpx solid rgba(255, 241, 207, 0.18);
+  border-top-color: #f8e5a9;
+  border-radius: 50%;
+  animation: spin 0.9s linear infinite;
+}
+
+.loading-text {
+  color: rgba(255, 241, 207, 0.7);
+  font-size: 26rpx;
+}
+
+.result-panel {
+  margin-top: 44rpx;
+}
+
+.result-image {
+  width: 100%;
+  height: 760rpx;
+  border-radius: 24rpx;
+  background: rgba(255, 255, 255, 0.04);
+  box-shadow: 0 18rpx 52rpx rgba(0, 0, 0, 0.34);
+}
+
+.action-row {
+  margin-top: 32rpx;
+  display: flex;
+  gap: 20rpx;
+}
+
+.secondary-btn,
+.primary-btn {
+  flex: 1;
+  margin: 0;
+}
+
+.secondary-btn {
+  height: 92rpx;
+  line-height: 92rpx;
+  border-radius: 46rpx;
+  background: rgba(248, 229, 169, 0.08);
+  color: rgba(255, 241, 207, 0.86);
+  border: 1rpx solid rgba(248, 229, 169, 0.22);
+  font-size: 28rpx;
+}
+
+button[disabled] {
+  opacity: 0.62;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}

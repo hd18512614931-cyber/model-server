@@ -1,0 +1,543 @@
+<view class="page-root">
+  <video
+    class="global-bg-video"
+    src="{{VIDEOS.story}}"
+    autoplay
+    loop
+    muted
+    object-fit="cover"
+    show-play-btn="{{false}}"
+    show-center-play-btn="{{false}}"
+    controls="{{false}}"
+    enable-progress-gesture="{{false}}"
+  ></video>
+  <view class="global-overlay"></view>
+
+  <view class="music-btn {{musicPlaying ? 'spinning' : ''}}" bindtap="toggleMusic">
+    <text class="music-icon">{{musicPlaying ? '♫' : '♪'}}</text>
+  </view>
+
+  <!-- ═══════ 卷宗签条 · 章节指示器 ═══════ -->
+  <view class="chapter-indicator">
+    <view class="chapter-volume">{{chapters[currentPage].volume}}</view>
+    <view class="chapter-seal">
+      <text class="chapter-seal-char">{{chapters[currentPage].id}}</text>
+    </view>
+    <view class="chapter-name">{{chapters[currentPage].name}}</view>
+  </view>
+
+  <view class="nav-dots">
+    <view
+      wx:for="{{chapters}}"
+      wx:key="id"
+      class="dot {{currentPage===index?'active':''}}"
+      bindtap="goToPage"
+      data-page="{{index}}"
+    >
+      <text class="dot-label">{{item.id}}</text>
+    </view>
+  </view>
+
+  <swiper
+    class="main-swiper"
+    vertical="{{true}}"
+    duration="{{500}}"
+    easing-function="easeInOutCubic"
+    bindchange="onSwiperChange"
+    current="{{currentPage}}"
+  >
+    <!-- ═══════════ 屏1 · 启 ═══════════ -->
+    <swiper-item>
+      <view class="screen screen-1">
+        <view class="s1-content">
+          <view class="s1-seal">非遗 · 探索</view>
+          <view class="s1-line"></view>
+          <text class="s1-subtitle">FOSHAN WOODBLOCK NEW YEAR PRINTS</text>
+          <text class="s1-subtitle-cn">国家级非物质文化遗产 · 数字探索</text>
+          <text class="s1-title">佛山木版年画</text>
+          <text class="s1-desc">刀锋与木纹之间，藏着三百年的故事</text>
+          <view class="s1-wood-bar"></view>
+        </view>
+
+        <view class="s1-bottom">
+          <view class="scroll-arrow">
+            <text class="arrow-text">↓</text>
+            <text class="arrow-hint">或向下滑动</text>
+          </view>
+        </view>
+      </view>
+    </swiper-item>
+
+    <!-- ═══════════ 屏2 · 史 ═══════════ -->
+    <swiper-item>
+      <view class="screen screen-2">
+        <view class="s2-header">
+          <text class="s2-label">溯 源</text>
+          <text class="s2-title">三百年刀木薪传</text>
+        </view>
+        <view class="timeline">
+          <view class="tl-line"></view>
+
+          <view class="tl-node {{currentEra===0?'tl-active':''}}" bindtap="onEraTap" data-index="0">
+            <view class="tl-dot"></view>
+            <view class="tl-content">
+              <text class="tl-year">1736</text>
+              <text class="tl-era-name">清 · 乾隆年间</text>
+              <text class="tl-one-line">年画店铺两百余家，从业者数千人</text>
+            </view>
+          </view>
+
+          <view class="tl-node {{currentEra===1?'tl-active':''}}" bindtap="onEraTap" data-index="1">
+            <view class="tl-dot"></view>
+            <view class="tl-content">
+              <text class="tl-year">1912</text>
+              <text class="tl-era-name">民国 · 变革时期</text>
+              <text class="tl-one-line">机器印刷冲击下的艰难坚守</text>
+            </view>
+          </view>
+
+          <view class="tl-node {{currentEra===2?'tl-active':''}}" bindtap="onEraTap" data-index="2">
+            <view class="tl-dot"></view>
+            <view class="tl-content">
+              <text class="tl-year">2006</text>
+              <text class="tl-era-name">当代 · 非遗传承</text>
+              <text class="tl-one-line">首批国家级非物质文化遗产</text>
+            </view>
+          </view>
+
+          <view class="tl-node {{currentEra===3?'tl-active':''}}" bindtap="onEraTap" data-index="3">
+            <view class="tl-dot dot-future"></view>
+            <view class="tl-content">
+              <text class="tl-year">2025</text>
+              <text class="tl-era-name">未来 · 数字新生</text>
+              <text class="tl-one-line">AI与年画的第一次对话</text>
+            </view>
+          </view>
+        </view>
+      </view>
+    </swiper-item>
+
+    <!-- ═══════════ 屏3 · 具 · 刀具图鉴 ═══════════ -->
+    <swiper-item>
+      <view class="screen screen-tools">
+        <view class="tools-header">
+          <text class="screen-label">器 具</text>
+          <text class="screen-heading">刀木图鉴</text>
+          <text class="tools-hint">点击签条 · 查看刃口与用途</text>
+        </view>
+
+        <!-- 主视觉签条墙 -->
+        <view class="tools-wall">
+          <view
+            wx:for="{{tools}}"
+            wx:key="name"
+            class="tool-tag {{toolActiveIndex===index?'tool-active':''}}"
+            style="--tool-color:{{item.color}};"
+            data-index="{{index}}"
+            bindtap="switchActiveTool"
+          >
+            <view class="tool-tag-string"></view>
+            <view class="tool-tag-hole"></view>
+            <view class="tool-tag-body">
+              <text class="tool-tag-num">{{index < 9 ? '0' + (index + 1) : (index + 1)}}</text>
+              <text class="tool-tag-name">{{item.short}}</text>
+              <view class="tool-tag-bar"></view>
+              <text class="tool-tag-purpose">{{item.purpose}}</text>
+            </view>
+          </view>
+        </view>
+
+        <!-- 当前选中工具卡片 -->
+        <view class="tool-detail-card" style="border-color:{{tools[toolActiveIndex].color}}44;">
+          <view class="tool-detail-head">
+            <view class="tool-detail-icon" style="background:{{tools[toolActiveIndex].color}};">
+              <text>{{tools[toolActiveIndex].short}}</text>
+            </view>
+            <view class="tool-detail-title-wrap">
+              <text class="tool-detail-name">{{tools[toolActiveIndex].name}}</text>
+              <text class="tool-detail-purpose">{{tools[toolActiveIndex].purpose}}</text>
+            </view>
+            <view class="tool-detail-spec">
+              <text class="tool-spec-line">{{tools[toolActiveIndex].angle}}</text>
+              <text class="tool-spec-line tool-spec-weight">{{tools[toolActiveIndex].weight}}</text>
+            </view>
+          </view>
+
+          <text class="tool-detail-desc">{{tools[toolActiveIndex].desc}}</text>
+
+          <view class="tool-detail-tip">
+            <text class="tool-tip-label">匠 人 笔 记</text>
+            <text class="tool-tip-text">{{tools[toolActiveIndex].detail}}</text>
+          </view>
+
+          <view class="tool-detail-more" bindtap="selectTool" data-index="{{toolActiveIndex}}">
+            <text>展 开 大 图</text>
+            <text class="more-arrow">↗</text>
+          </view>
+        </view>
+      </view>
+    </swiper-item>
+
+    <!-- ═══════════ 屏4 · 技 ═══════════ -->
+    <swiper-item>
+      <view class="screen screen-craft">
+        <view class="craft-header">
+          <text class="screen-label">工 艺</text>
+          <text class="screen-heading">年画制作</text>
+          <text class="craft-hint">左右滑动，亲历一版年画的诞生</text>
+        </view>
+
+        <swiper
+          class="craft-swiper"
+          current="{{craftStepIndex}}"
+          bindchange="onCraftStepChange"
+          indicator-dots="{{false}}"
+          circular="{{false}}"
+        >
+          <swiper-item wx:for="{{craftSteps}}" wx:key="index">
+            <view class="craft-card">
+              <view class="craft-num">{{item.num}}</view>
+              <view class="craft-card-inner">
+                <image class="craft-img" src="{{item.image}}" mode="aspectFill" lazy-load></image>
+                <view class="craft-body">
+                  <text class="craft-title">{{item.title}}</text>
+                  <text class="craft-tool">工具：{{item.tool}}</text>
+                  <text class="craft-desc">{{item.desc}}</text>
+                  <view class="craft-tip">
+                    <text class="craft-tip-label">匠人心得</text>
+                    <text class="craft-tip-text">{{item.tip}}</text>
+                  </view>
+                </view>
+              </view>
+            </view>
+          </swiper-item>
+        </swiper>
+
+        <view class="craft-dots">
+          <view
+            wx:for="{{craftSteps}}"
+            wx:key="index"
+            class="craft-dot {{craftStepIndex===index?'active':''}}"
+            data-index="{{index}}"
+            bindtap="goToCraftStep"
+          >
+            <text class="dot-name">{{item.short}}</text>
+          </view>
+        </view>
+      </view>
+    </swiper-item>
+
+    <!-- ═══════════ 屏4 · 色 ═══════════ -->
+    <swiper-item>
+      <view class="screen screen-color-game">
+        <view class="color-game-header">
+          <text class="screen-label">套 印</text>
+          <text class="screen-heading">五色套印</text>
+          <view class="color-reset-btn {{printedSteps.length===0?'reset-hidden':''}}" catchtap="resetLogoPrint">
+            <text>重来</text>
+          </view>
+        </view>
+
+        <!-- 木板切换指示器 -->
+        <view class="block-indicator">
+          <view class="block-arrow {{currentBlockIndex===0?'arrow-dim':''}}" catchtap="prevPrintBlock">
+            <text>‹</text>
+          </view>
+          <view class="block-current" catchtap="cyclePrintBlock">
+            <view class="block-dot-main" style="background:{{activePrintBlock.color}};"></view>
+            <view class="block-info">
+              <text class="block-title">{{activePrintBlock.name}}</text>
+              <text class="block-hint" wx:if="{{activePrintBlock.printed}}">已印 · 点此换木板</text>
+              <text class="block-hint" wx:else>拖动纸张落版</text>
+            </view>
+          </view>
+          <view class="block-arrow {{currentBlockIndex===4?'arrow-dim':''}}" catchtap="nextPrintBlock">
+            <text>›</text>
+          </view>
+        </view>
+
+        <!-- 纸拖印刷区域 -->
+        <view class="paper-drag-area">
+          <view
+            class="woodbed"
+            style="border-top-color:{{activePrintBlock.color}}; box-shadow: 0 16rpx 40rpx rgba(0, 0, 0, 0.45), inset 0 4rpx 0 {{activePrintBlock.color}};"
+          >
+            <view class="woodbed-grain"></view>
+            <view class="woodbed-label">
+              <text>版 台 · 第{{activePrintBlock.order}}版</text>
+            </view>
+          </view>
+
+          <view
+            class="paper-sheet {{isPaperDragging ? 'paper-dragging' : ''}} {{isPaperPressing ? 'paper-pressing' : ''}}"
+            style="transform: translateY({{paperDragOffset}}rpx) rotate({{paperRotation}}deg);"
+            catchtouchstart="onPaperTouchStart"
+            catchtouchmove="onPaperTouchMove"
+            catchtouchend="onPaperTouchEnd"
+          >
+            <image
+              wx:for="{{logoPrintLayers}}"
+              wx:key="id"
+              src="{{item.fileID}}"
+              mode="aspectFit"
+              class="paper-layer {{item.visible ? 'layer-visible' : ''}} {{item.fresh ? 'layer-fresh' : ''}}"
+              style="z-index: {{item.zIndex}};"
+            ></image>
+
+            <view wx:if="{{printedSteps.length === 0}}" class="paper-empty-hint">
+              <text class="hint-arrow">↡</text>
+              <text class="hint-text">向下拖动纸张</text>
+              <text class="hint-sub">开始套色印刷</text>
+            </view>
+
+            <view class="paper-texture"></view>
+          </view>
+        </view>
+
+        <!-- 色版选择器 -->
+        <view class="block-selector">
+          <view
+            wx:for="{{printBlocks}}"
+            wx:key="index"
+            class="block-chip {{currentBlockIndex===index ? 'chip-active' : ''}} {{item.printed ? 'chip-printed' : ''}}"
+            data-index="{{index}}"
+            catchtap="selectPrintBlock"
+          >
+            <view class="chip-dot" style="background:{{item.color}};">
+              <text wx:if="{{item.printed}}" class="chip-check">✓</text>
+              <text wx:else style="color:{{item.textColor}};">{{item.order}}</text>
+            </view>
+            <text class="chip-name">{{item.shortName}}</text>
+          </view>
+        </view>
+
+        <!-- 颜色信息面板 -->
+        <view class="color-info {{activePrintStep ? 'color-info-live' : ''}}">
+          <text class="color-info-kicker">
+            {{activePrintStep ? '第' + activePrintStep.order + '版 · ' + activePrintStep.meaning : '套印体验'}}
+          </text>
+          <text class="color-info-name" style="color:{{activePrintStep ? activePrintStep.color : '#F2C94C'}};">
+            {{activePrintStep ? activePrintStep.name : '选择版台，拖动纸张落版'}}
+          </text>
+          <text class="color-info-line">
+            {{activePrintStep ? '颜料：' + activePrintStep.material : '向下拖动纸张至版台，模拟套印技法。每版可反复印刷。'}}
+          </text>
+          <text class="color-info-desc">
+            {{activePrintStep ? activePrintStep.desc : '印完一版按顺序切换木板；也可手动点下方色版选择木板重新印刷。'}}
+          </text>
+        </view>
+      </view>
+    </swiper-item>
+
+    <!-- ═══════════ 屏5 · 典 ═══════════ -->
+    <swiper-item>
+      <view class="screen screen-cards">
+        <text class="screen-label">图 鉴</text>
+        <text class="screen-heading">年画图鉴</text>
+        <text class="screen-hint">点击卡片翻转探索</text>
+
+        <view class="cards-grid">
+          <view
+            wx:for="{{cards}}"
+            wx:key="index"
+            class="flip-container"
+            data-index="{{index}}"
+            bindtap="flipCard"
+          >
+            <view class="flip-inner {{item.flipped ? 'flipped' : ''}}">
+              <view class="flip-front">
+                <image src="{{item.image}}" mode="aspectFill" class="flip-img" lazy-load></image>
+                <text class="flip-name">{{item.title}}</text>
+              </view>
+              <view class="flip-back">
+                <text class="flip-back-cat">{{item.category}}</text>
+                <text class="flip-back-title">{{item.title}}</text>
+                <text class="flip-back-desc">{{item.desc}}</text>
+              </view>
+            </view>
+          </view>
+        </view>
+      </view>
+    </swiper-item>
+
+    <!-- ═══════════ 屏6 · 考 ═══════════ -->
+    <swiper-item>
+      <view class="screen screen-quiz">
+        <text class="screen-label">测 验</text>
+        <text class="screen-heading">考考你</text>
+
+        <block wx:if="{{!quizFinished}}">
+          <text class="quiz-progress">{{currentQuestion + 1}} / {{quiz.length}}</text>
+          <text class="quiz-question">{{quiz[currentQuestion].question}}</text>
+
+          <view class="quiz-options">
+            <view
+              wx:for="{{quiz[currentQuestion].options}}"
+              wx:key="index"
+              wx:for-item="option"
+              class="quiz-opt {{showExplanation && index === quiz[currentQuestion].answer ? 'quiz-correct' : ''}} {{showExplanation && index === selectedOption && index !== quiz[currentQuestion].answer ? 'quiz-wrong' : ''}}"
+              data-index="{{index}}"
+              bindtap="selectQuizOption"
+            >
+              <text>{{option}}</text>
+            </view>
+          </view>
+
+          <view wx:if="{{showExplanation}}" class="quiz-explain">
+            <text>{{quiz[currentQuestion].explanation}}</text>
+          </view>
+        </block>
+
+        <block wx:if="{{quizFinished}}">
+          <view class="quiz-result">
+            <text class="quiz-score-num">{{quizScore}}/{{quiz.length}}</text>
+            <text wx:if="{{quizScore === 3}}" class="quiz-msg">年画大师！了如指掌。</text>
+            <text wx:elif="{{quizScore === 2}}" class="quiz-msg">不错，已有不少了解。</text>
+            <text wx:elif="{{quizScore === 1}}" class="quiz-msg">继续探索，精彩无限。</text>
+            <text wx:else class="quiz-msg">没关系，往回滑看看知识点。</text>
+            <view class="quiz-reset" bindtap="resetQuiz">
+              <text>重新答题</text>
+            </view>
+          </view>
+        </block>
+      </view>
+    </swiper-item>
+
+    <!-- ═══════════ 屏7 · 览 ═══════════ -->
+    <swiper-item>
+      <view class="screen screen-explore">
+        <view class="explore-header">
+          <text class="screen-label">探 索</text>
+          <text class="screen-heading">更多体验</text>
+        </view>
+
+        <view class="explore-grid">
+          <view class="explore-card explore-3d" bindtap="goTo3D">
+            <image class="explore-card-bg" src="{{IMAGES.swordDanceFront}}" mode="aspectFill"></image>
+            <view class="explore-card-mask"></view>
+            <text class="explore-card-title">3D 展厅</text>
+            <text class="explore-card-hint">沉浸 · 旋转 · 探索</text>
+          </view>
+
+          <view class="explore-card explore-2d" bindtap="goTo2D">
+            <image class="explore-card-bg" src="{{IMAGES.baxian}}" mode="aspectFill"></image>
+            <view class="explore-card-mask"></view>
+            <text class="explore-card-title">2D 展厅</text>
+            <text class="explore-card-hint">分色 · 拆解 · 对比</text>
+          </view>
+
+          <view class="explore-card explore-ai-generate" bindtap="goToAiGenerate">
+            <image class="explore-card-bg" src="{{IMAGES.boardDisplay}}" mode="aspectFill"></image>
+            <view class="explore-card-mask"></view>
+            <text class="explore-card-title">AI 生图</text>
+            <text class="explore-card-hint">输入主题 · 生成年画</text>
+          </view>
+
+          <view class="explore-card explore-ai-home" bindtap="goToAiHome">
+            <image class="explore-card-bg" src="{{IMAGES.coloringCloseup}}" mode="aspectFill"></image>
+            <view class="explore-card-mask"></view>
+            <text class="explore-card-title">AI 二创主页</text>
+            <text class="explore-card-hint">创作 · 分色 · 开发中</text>
+          </view>
+        </view>
+      </view>
+    </swiper-item>
+
+    <!-- ═══════════ 屏8 · 传 ═══════════ -->
+    <swiper-item>
+      <view class="screen screen-team">
+        <text class="screen-label">关 于</text>
+        <text class="screen-heading">年画薪传突击队</text>
+
+        <view class="team-divider"></view>
+
+        <text class="team-desc">
+          我们是一群热爱传统文化的大学生，
+          用数字技术让非遗走进年轻人的世界。
+        </text>
+
+        <view class="team-info">
+          <text class="team-line">广州新华学院</text>
+        </view>
+
+        <view class="team-footer">
+          <text class="team-footer-text">佛山木版年画 · 数字体验</text>
+          <text class="team-footer-year">2025</text>
+        </view>
+      </view>
+    </swiper-item>
+  </swiper>
+
+  <!-- ═══════════ 刀具大图弹窗 ═══════════ -->
+  <view class="tool-modal" wx:if="{{toolDetailOpen}}" bindtap="closeToolDetail">
+    <view class="tool-modal-content" catchtap="noop">
+      <view class="tool-modal-close" bindtap="closeToolDetail">✕</view>
+      <image
+        wx:if="{{selectedTool.image}}"
+        class="tool-modal-img"
+        src="{{selectedTool.image}}"
+        mode="aspectFill"
+      ></image>
+      <view class="tool-modal-banner" style="background:{{selectedTool.color}};">
+        <text class="tool-modal-banner-text">{{selectedTool.name}} · {{selectedTool.purpose}}</text>
+      </view>
+      <view class="tool-modal-body">
+        <view class="tool-modal-spec-row">
+          <view class="tool-modal-spec">
+            <text class="spec-label">刃 口</text>
+            <text class="spec-value">{{selectedTool.angle}}</text>
+          </view>
+          <view class="tool-modal-spec">
+            <text class="spec-label">重 量</text>
+            <text class="spec-value">{{selectedTool.weight}}</text>
+          </view>
+        </view>
+        <text class="tool-modal-desc">{{selectedTool.desc}}</text>
+        <view class="tool-modal-divider"></view>
+        <text class="tool-modal-section-title">匠 人 笔 记</text>
+        <text class="tool-modal-section-text">{{selectedTool.detail}}</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- ═══════════ 时代弹窗 ═══════════ -->
+  <view class="era-modal" wx:if="{{showEraDetail}}" bindtap="closeEraDetail">
+    <view class="era-modal-content" catchtap="noop">
+      <view class="era-modal-close" bindtap="closeEraDetail">✕</view>
+      <text class="era-modal-year">{{eraDetail.year}}</text>
+      <text class="era-modal-title">{{eraDetail.title}}</text>
+      <scroll-view
+        wx:if="{{eraDetail.images && eraDetail.images.length > 0}}"
+        scroll-x
+        class="era-modal-gallery"
+        enhanced
+        show-scrollbar="{{false}}"
+      >
+        <image
+          wx:for="{{eraDetail.images}}"
+          wx:key="*this"
+          src="{{item}}"
+          mode="aspectFill"
+          class="era-modal-gallery-img"
+          bindtap="previewImage"
+          data-src="{{item}}"
+          data-urls="{{eraDetail.images}}"
+        ></image>
+      </scroll-view>
+      <text class="era-modal-text">{{eraDetail.desc}}</text>
+      <view wx:if="{{eraDetail.hasVideo}}" class="era-modal-video-wrap">
+        <video
+          src="{{VIDEOS.making}}"
+          controls
+          enable-play-gesture
+          show-center-play-btn
+          object-fit="contain"
+          class="era-modal-video"
+        ></video>
+      </view>
+      <view wx:if="{{eraDetail.isLast}}" class="era-modal-btn" bindtap="goToAiGenerate">
+        <text>体验 AI 生图 →</text>
+      </view>
+    </view>
+  </view>
+</view>

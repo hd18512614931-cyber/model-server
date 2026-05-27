@@ -1,0 +1,24 @@
+{
+  "pages": [
+    "pages/home/home",
+    "pages/index/index",
+    "pages/ai-create/ai-create",
+    "pages/create/create",
+    "pages/layers/layers",
+    "pages/exploded-view/exploded-view",
+    "pages/model3d-viewer/model3d-viewer",
+    "pages/ai-3d/ai-3d",
+    "pages/gallery/gallery",
+    "pages/knowledge/knowledge"
+  ],
+  "window": {
+    "backgroundTextStyle": "light",
+    "navigationBarBackgroundColor": "#C41E3A",
+    "navigationBarTitleText": "佛山年画",
+    "navigationBarTextStyle": "white"
+  },
+  "usingComponents": {
+    "layer-stack": "/components/layer-stack/layer-stack"
+  },
+  "sitemapLocation": "sitemap.json"
+}

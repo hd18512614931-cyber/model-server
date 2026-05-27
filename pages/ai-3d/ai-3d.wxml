@@ -1,0 +1,50 @@
+<view class="container">
+  <view class="header">
+    <text class="title">AI 图片生成 3D 模型</text>
+    <text class="subtitle">上传一张图片，AI 自动生成 3D 模型</text>
+  </view>
+
+  <!-- 图片选择区域 -->
+  <view class="upload-area" bindtap="chooseImage">
+    <image wx:if="{{imagePath}}" src="{{imagePath}}" mode="aspectFit" class="preview-image"/>
+    <view wx:else class="upload-placeholder">
+      <text class="upload-icon">+</text>
+      <text class="upload-text">点击选择图片</text>
+    </view>
+  </view>
+
+  <!-- 生成按钮 -->
+  <button
+    class="generate-btn {{(!imagePath || loading) ? 'disabled' : ''}}"
+    bindtap="generate3D"
+    disabled="{{!imagePath || loading}}"
+  >
+    <text wx:if="{{loading}}">{{loadingText}}</text>
+    <text wx:else>生成 3D 模型</text>
+  </button>
+
+  <!-- 状态提示 -->
+  <view wx:if="{{loading}}" class="status-area">
+    <view class="loading-spinner"></view>
+    <text class="status-text">{{loadingText}}</text>
+    <text class="status-hint">通常需要 1-3 分钟，请耐心等待</text>
+  </view>
+
+  <!-- 历史生成 -->
+  <view wx:if="{{modelHistory.length > 0}}" class="history-section">
+    <text class="history-title">历史生成</text>
+    <view
+      wx:for="{{modelHistory}}"
+      wx:key="path"
+      class="history-item"
+      bindtap="viewHistoryModel"
+      data-index="{{index}}"
+    >
+      <view class="history-info">
+        <text class="history-name">{{item.name}}</text>
+        <text class="history-time">{{item.time}}</text>
+      </view>
+      <text class="history-arrow">›</text>
+    </view>
+  </view>
+</view>

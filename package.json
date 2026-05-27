@@ -2,7 +2,10 @@
   "name": "model-server",
   "version": "1.0.0",
   "private": true,
+  "description": "佛山木版年画 AI 创作微信小程序与后端分色服务",
+  "type": "commonjs",
   "dependencies": {
-    "sharp": "^0.34.5"
+    "sharp": "^0.34.5",
+    "three-platformize": "^1.133.3"
   }
 }
