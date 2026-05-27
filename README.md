@@ -14,8 +14,11 @@
 
 
 https://github.com/user-attachments/assets/fe38bd64-449a-4ddb-baea-47126fa811b0
+
 https://github.com/user-attachments/assets/deee9084-b134-409f-93b5-197b00a64baf
+
 https://github.com/user-attachments/assets/32489462-f95c-4a7f-8243-1b6f21877859
+
 ## 项目定位
 
 项目的核心目标不是只做一个展示页，而是把传统木版年画的“分版、上色、套印”过程做成可交互、可解释、可演示的数字体验。它既可以作为非遗传播作品，也可以作为我在实习面试中展示工程能力、AI 应用落地能力和 CI/CD 实践经验的项目。
