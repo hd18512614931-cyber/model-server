@@ -1,5 +1,5 @@
 const app = getApp()
-const { getApiBaseURL } = require('../../utils/apiBaseURL')
+const { getApiBaseURL } = require('./utils/apiBaseURL')
 
 Page({
   data: {

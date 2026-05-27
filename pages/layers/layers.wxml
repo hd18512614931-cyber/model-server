@@ -1,5 +1,171 @@
-<view class="dev-page">
-  <view class="dev-icon"></view>
-  <text class="dev-title">功能开发中</text>
-  <text class="dev-desc">更多个人功能即将上线，敬请期待</text>
+<view class="layers-page">
+  <!-- ═══════════════ 顶栏 ═══════════════ -->
+  <view class="top-bar">
+    <view class="top-back" bindtap="goBack">
+      <text class="top-back-icon">‹</text>
+    </view>
+
+    <view class="top-title-area">
+      <text class="top-title">五色套印</text>
+      <text class="top-subtitle">色彩图层管理</text>
+    </view>
+
+    <view class="top-actions">
+      <view class="top-action-btn" bindtap="toggleHelp">
+        <text class="top-action-icon">?</text>
+      </view>
+      <view class="top-action-btn primary" bindtap="togglePreviewMode">
+        <text class="top-action-icon">{{previewMode === 'stack' ? '⊞' : '⊟'}}</text>
+        <text class="top-action-label">{{previewMode === 'stack' ? '堆叠' : '并排'}}</text>
+      </view>
+      <view class="top-action-btn" bindtap="toggleOpacityPanel">
+        <text class="top-action-icon">◐</text>
+        <text class="top-action-label">透明度</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- ═══════════════ 加载态 ═══════════════ -->
+  <view class="loading-panel" wx:if="{{loading}}">
+    <view class="loading-ring"></view>
+    <text class="loading-text">加载图层中...</text>
+  </view>
+
+  <!-- ═══════════════ 帮助面板 ═══════════════ -->
+  <view class="help-overlay" wx:if="{{showHelp}}" bindtap="toggleHelp">
+    <view class="help-card" catchtap="">
+      <text class="help-title">操作提示</text>
+      <view class="help-list">
+        <text class="help-item">• 点击色块切换图层显隐</text>
+        <text class="help-item">• 长按上下拖动可调整图层顺序</text>
+        <text class="help-item">• 堆叠模式：图层正片叠底预览</text>
+        <text class="help-item">• 并排模式：各图层独立展示</text>
+        <text class="help-item">• 透明度滑块调整单层浓淡</text>
+      </view>
+      <view class="help-close">点击空白处关闭</view>
+    </view>
+  </view>
+
+  <!-- ═══════════════ 预览画布 ═══════════════ -->
+  <view class="preview-section">
+    <!-- 堆叠模式 -->
+    <view class="preview-stack" wx:if="{{previewMode === 'stack'}}">
+      <view class="stack-paper"></view>
+      <image
+        wx:for="{{layers}}"
+        wx:key="index"
+        wx:if="{{layerVisibility[item.index] !== false}}"
+        class="stack-layer"
+        src="{{item.tempPath}}"
+        mode="aspectFit"
+        style="z-index: {{item.order}}; opacity: {{opacityValues[item.index] !== undefined ? opacityValues[item.index] : 1}};"
+      ></image>
+      <view class="stack-label">
+        <text class="stack-label-text">最终效果预览</text>
+      </view>
+    </view>
+
+    <!-- 并排模式 -->
+    <scroll-view class="preview-grid" scroll-x enhanced show-scrollbar="{{false}}" wx:if="{{previewMode === 'grid'}}">
+      <view class="grid-row">
+        <view
+          wx:for="{{layers}}"
+          wx:key="index"
+          class="grid-cell {{layerVisibility[item.index] === false ? 'cell-dimmed' : ''}}"
+        >
+          <view class="cell-paper">
+            <image
+              class="cell-image"
+              src="{{item.tempPath}}"
+              mode="aspectFit"
+            ></image>
+          </view>
+          <view class="cell-info">
+            <view class="cell-dot" style="background: {{item.color}};"></view>
+            <text class="cell-label">{{item.label}}</text>
+            <text class="cell-order">#{{item.order}}</text>
+          </view>
+        </view>
+      </view>
+    </scroll-view>
+  </view>
+
+  <!-- ═══════════════ 透明度面板 ═══════════════ -->
+  <view class="opacity-panel" wx:if="{{editingOpacity}}">
+    <view class="opacity-list">
+      <view class="opacity-row" wx:for="{{layers}}" wx:key="index">
+        <view class="opacity-dot" style="background: {{item.color}};"></view>
+        <text class="opacity-label">{{item.label}}</text>
+        <slider
+          class="opacity-slider"
+          min="0"
+          max="100"
+          value="{{opacityValues[item.index] * 100}}"
+          data-index="{{item.index}}"
+          bindchange="onOpacityChange"
+          activeColor="{{item.color}}"
+          backgroundColor="rgba(255,247,230,0.12)"
+          block-size="16"
+        ></slider>
+        <text class="opacity-value">{{(opacityValues[item.index] * 100).toFixed(0)}}%</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- ═══════════════ 图层列表 ═══════════════ -->
+  <view class="layer-list">
+    <view class="list-header">
+      <text class="list-header-title">套色图层</text>
+      <view class="list-header-actions">
+        <text class="header-action" bindtap="showAll">全显示</text>
+        <text class="header-divider">|</text>
+        <text class="header-action" bindtap="hideAll">全隐藏</text>
+      </view>
+    </view>
+
+    <scroll-view class="list-scroll" scroll-y enhanced show-scrollbar="{{false}}">
+      <view
+        wx:for="{{layers}}"
+        wx:key="index"
+        class="layer-item {{layerVisibility[item.index] === false ? 'item-hidden' : ''}} {{draggingIndex === item.index ? 'item-dragging' : ''}}"
+        style="{{draggingIndex === item.index ? 'transform: translateY(' + dragTranslateY + 'px); z-index: 100;' : ''}}"
+        data-index="{{item.index}}"
+        bindtouchstart="onLayerTouchStart"
+        bindtouchmove="onLayerTouchMove"
+        bindtouchend="onLayerTouchEnd"
+      >
+        <!-- 左侧：颜色指示器 + 信息 -->
+        <view class="item-left">
+          <view class="item-color-strip" style="background: {{item.color}};"></view>
+          <view class="item-info">
+            <text class="item-label">{{item.label}}</text>
+            <text class="item-desc">{{item.desc}}</text>
+          </view>
+        </view>
+
+        <!-- 中间：小缩略图 -->
+        <view class="item-thumb" bindtap="toggleLayer" data-index="{{item.index}}">
+          <image
+            class="item-thumb-img {{layerVisibility[item.index] === false ? 'thumb-off' : ''}}"
+            src="{{item.tempPath}}"
+            mode="aspectFit"
+          ></image>
+          <view class="thumb-status" wx:if="{{layerVisibility[item.index] === false}}">
+            <text class="thumb-status-icon">⊗</text>
+          </view>
+        </view>
+
+        <!-- 右侧：顺序操作 -->
+        <view class="item-actions">
+          <view class="item-action-btn {{layers.indexOf(item) === 0 ? 'disabled' : ''}}" data-index="{{item.index}}" bindtap="moveLayerUp" catchtap="moveLayerUp">
+            <text class="item-action-icon">∧</text>
+          </view>
+          <text class="item-order-num">{{item.order}}</text>
+          <view class="item-action-btn {{layers.indexOf(item) === layers.length - 1 ? 'disabled' : ''}}" data-index="{{item.index}}" bindtap="moveLayerDown" catchtap="moveLayerDown">
+            <text class="item-action-icon">∨</text>
+          </view>
+        </view>
+      </view>
+    </scroll-view>
+  </view>
 </view>

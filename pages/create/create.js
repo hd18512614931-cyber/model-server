@@ -1,4 +1,5 @@
-const { getApiBaseURL } = require('../../utils/apiBaseURL');
+const { requestSplitColors } = require('./utils/splitColors');
+const { saveLayerImage } = require('./utils/saveLayerImage');
 
 const USER_CACHE_KEY = 'userColorLayers';
 const MAX_USER_RECORDS = 10;
@@ -55,12 +56,20 @@ Page({
 
       for (let i = 0; i < result.layers.length; i++) {
         const layer = result.layers[i];
-        const filePath = wx.env.USER_DATA_PATH + '/user_layer_' + id + '_' + i + '.png';
-        const data = layer.data || layer.base64 || '';
-        const base64Data = data.replace(/^data:image\/\w+;base64,/, '');
-        if (!base64Data) continue;
+        if (layer.fileID) {
+          layers.push({
+            tempPath: layer.fileID,
+            fileID: layer.fileID,
+            color: layer.color || '',
+            label: layer.label || ('图层' + (i + 1))
+          });
+          continue;
+        }
 
-        fs.writeFileSync(filePath, wx.base64ToArrayBuffer(base64Data), 'binary');
+        const filePath = wx.env.USER_DATA_PATH + '/user_layer_' + id + '_' + i + '.png';
+        const saved = await saveLayerImage(layer, filePath, fs);
+        if (!saved) continue;
+
         layers.push({
           tempPath: filePath,
           color: layer.color || '',
@@ -144,26 +153,6 @@ Page({
   },
 
   _requestSplitColors(imageBase64) {
-    return new Promise((resolve, reject) => {
-      wx.request({
-        url: `${getApiBaseURL()}/api/split-colors`,
-        method: 'POST',
-        header: { 'Content-Type': 'application/json' },
-        data: {
-          imageBase64: imageBase64,
-          imageUrl: imageBase64,
-          removeBackground: false
-        },
-        timeout: 120000,
-        success: (res) => {
-          if (res.statusCode >= 200 && res.statusCode < 300 && res.data && res.data.success) {
-            resolve(res.data);
-          } else {
-            reject(new Error((res.data && res.data.error) || '分色请求失败'));
-          }
-        },
-        fail: (err) => reject(new Error(err.errMsg || '网络请求失败'))
-      });
-    });
+    return requestSplitColors(imageBase64, { removeBackground: false });
   }
 });

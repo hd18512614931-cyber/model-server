@@ -1,4 +1,4 @@
-const { IMAGES, VIDEOS, LAYERS } = require('../../constants/cloudAssets');
+const { IMAGES, VIDEOS, LAYERS, TOOL_IMAGES, ADVANCED_PRINT_IMAGES } = require('../../constants/cloudAssets');
 const { resolveCloudURL } = require('../../utils/resolveCloudURL');
 
 const ERA_DATA = [
@@ -30,7 +30,7 @@ const ERA_DATA = [
     isLast: false
   },
   {
-    year: '2025',
+    year: '2026',
     title: '当AI遇见年画',
     desc: '当三百年的刀木技艺遇上人工智能，会碰撞出怎样的火花？\n\n我们用3D建模重构年画的空间维度，用AI图像生成探索年画的无限可能，用交互动画让年画从纸面走进屏幕。\n\n这不是对传统的替代，而是一次跨越时空的对话。每一个AI生成的年画，都携带着三百年木版技艺的基因密码。\n\n传统不是用来封存的，而是用来重新想象的。',
     image: IMAGES.swordDanceFront,
@@ -98,6 +98,57 @@ const LOGO_PRINT_STEPS = [
   }
 ];
 
+const ADVANCED_PRINT_STEPS = [
+  {
+    name: '墨线木板',
+    shortName: '黑',
+    color: '#1A1A1A',
+    textColor: '#ffffff',
+    order: 1,
+    material: '松烟墨',
+    purpose: '线稿定位',
+    boardImage: ADVANCED_PRINT_IMAGES.blackBoard,
+    layerImage: ADVANCED_PRINT_IMAGES.backendLayer3,
+    desc: '黑版负责人物外轮廓、眉眼和衣甲线条，是后续色版对位的基准。'
+  },
+  {
+    name: '万年红木板',
+    shortName: '红',
+    color: '#D42F2F',
+    textColor: '#ffffff',
+    order: 2,
+    material: '红丹色',
+    purpose: '主色铺底',
+    boardImage: ADVANCED_PRINT_IMAGES.redBoard,
+    layerImage: ADVANCED_PRINT_IMAGES.backendLayer0,
+    desc: '红版承担门神最醒目的气势，先把衣袍、甲片和喜庆色面压稳。'
+  },
+  {
+    name: '石黄木板',
+    shortName: '黄',
+    color: '#F2C94C',
+    textColor: '#1A0F08',
+    order: 3,
+    material: '石黄/藤黄',
+    purpose: '提亮装饰',
+    boardImage: ADVANCED_PRINT_IMAGES.yellowBoard,
+    layerImage: ADVANCED_PRINT_IMAGES.backendLayer1,
+    desc: '黄色版补出脸部、花纹和亮面，让红底上产生更清晰的层次。'
+  },
+  {
+    name: '青绿木板',
+    shortName: '绿',
+    color: '#5396AC',
+    textColor: '#ffffff',
+    order: 4,
+    material: '石青/石绿',
+    purpose: '补色压层',
+    boardImage: ADVANCED_PRINT_IMAGES.greenBoard,
+    layerImage: ADVANCED_PRINT_IMAGES.backendLayer2,
+    desc: '青绿色版来自后端分色结果，负责冷色衣甲和局部装饰，让四版叠加时保持同一画面比例和位置。'
+  }
+];
+
 const CRAFT_STEPS = [
   {
     num: '壹',
@@ -111,20 +162,20 @@ const CRAFT_STEPS = [
   {
     num: '贰',
     short: '刻版',
-    title: '梨木刻版',
-    tool: '棠梨木、刻刀十余种',
-    image: IMAGES.carvingHD,
-    desc: '将画稿反贴在棠梨木上，用拳刀、弯刀、三角刀等十余种刻刀，沿墨线雕刻。刻版是年画技艺中最考验功力的一环。',
-    tip: '一块好的雕版可以印刷数千张而不变形，这取决于木材的选择和刀法的深浅。'
+    title: '选板刻版',
+    tool: '梨木板、椴木板、拳刀、清底刀',
+    image: TOOL_IMAGES.woodBoards,
+    desc: '雕版先看木性：梨木质密耐磨，适合细线和长期反复套印；椴木纹理较匀、下刀更顺，适合练习版和大色块。画稿反贴后，再用拳刀、三角刀、弯凿刀与清底刀分层刻出线面。',
+    tip: '好版不是只看木头硬不硬，而是看纹理、含水率和刀路能不能稳定留住细线。'
   },
   {
     num: '叁',
     short: '套印',
     title: '五色套印',
     tool: '雕版、棕刷、宣纸',
-    image: IMAGES.coloringCloseup,
-    desc: '按"墨线→红丹→石黄→赭黄→靛青"的顺序逐层套印。每印一色需等前色半干，方能保证色层分明而不混色。',
-    tip: '套印时最忌"跑版"——前后两版对位稍有偏差，整幅画就废了。'
+    image: TOOL_IMAGES.palmBrush,
+    desc: '棕刷用棕榈纤维制成，蘸色后在版面上反复扫匀，再把纸覆上压印。按"墨线→红丹→石黄→赭黄→靛青"逐层套印，每一色都要独立上刷，避免串色。',
+    tip: '棕刷既要蓄色，也要把颜料铺薄铺匀；刷痕太重会糊线，太轻又会漏印。'
   },
   {
     num: '肆',
@@ -151,7 +202,7 @@ const CHAPTERS = [
   { id: '史', name: '溯源', subtitle: '三百年刀木薪传', volume: '卷二' },
   { id: '具', name: '器具', subtitle: '刀木之间的精度', volume: '卷三' },
   { id: '技', name: '工艺', subtitle: '一版年画的诞生', volume: '卷四' },
-  { id: '色', name: '套印', subtitle: '五色叠印的秩序', volume: '卷五' },
+  { id: '版', name: '版台', subtitle: '分色木板交互', volume: '卷五' },
   { id: '典', name: '图鉴', subtitle: '经典年画卡牌', volume: '卷六' },
   { id: '考', name: '测验', subtitle: '检验你的探索', volume: '卷七' },
   { id: '览', name: '探索', subtitle: '更多体验入口', volume: '卷八' },
@@ -162,67 +213,67 @@ const TOOLS = [
   {
     name: '拳刀',
     short: '拳',
-    purpose: '开版第一刀',
-    desc: '木版年画雕刻的主力刀具，握法似拳，用于切出粗壮有力的轮廓主线。一块版的起稿轮廓多由拳刀完成。',
-    detail: '刃口宽厚，斜角约 30°，需以双手发力推刻——匠人称之为"开版第一刀"，决定整版气韵。',
-    image: IMAGES.carvingHD,
+    purpose: '开线与主轮廓',
+    desc: '拳刀是木版雕刻里最有力量感的刀具，握持时掌心包住刀柄，适合切出门神衣甲、兵器和外轮廓的主线。',
+    detail: '下刀时靠手腕和掌根稳定推进，刀路要直而不僵。主轮廓一旦走偏，后面的细线和清底都会跟着变形。',
+    image: TOOL_IMAGES.fistKnife,
     color: '#D42F2F',
-    angle: '正面 30°',
+    angle: '主刀 30°',
     weight: '约 220g'
   },
   {
-    name: '弯刀',
+    name: '弯凿刀',
     short: '弯',
     purpose: '转弯与弧线',
-    desc: '刀身略带弧度，专门处理曲线轮廓和人物衣纹的转折处。处理袖口、衣角、髯须等柔性结构的关键。',
-    detail: '弧度越深越能贴合更小的转角；老匠人手里常备 3–4 种不同弧度。',
-    image: IMAGES.boardDisplay,
+    desc: '弯凿刀用来处理圆转的线条和凹面，适合衣纹、云纹、飘带和人物胡须这类连续弧线。',
+    detail: '弯口能顺着木纹转向，减少硬折角。遇到小半径弧线时，需要短刀路多次接续，线条才不会断气。',
+    image: TOOL_IMAGES.curvedKnife,
     color: '#E6A817',
-    angle: '弧角 45°',
+    angle: '弯口 45°',
     weight: '约 180g'
   },
   {
     name: '三角刀',
     short: '三',
     purpose: '细线与脉理',
-    desc: '"V"字形刀口，切出又细又利的线条。人物的发丝、衣物的纹路、花瓣的脉络都靠它完成。',
-    detail: '刀口越尖切出的线越细；雕一根胡须，匠人要走刀十余次方能见神。',
-    image: IMAGES.lightOnBoard,
+    desc: '三角刀的刃口呈 V 形，负责细线、发丝、花叶脉络和衣纹暗线，是让画面有精神的细节刀。',
+    detail: '同一条线常要先浅刻定位，再沿两侧修整。刀口太深会让线条发硬，太浅又容易在套印时糊掉。',
+    image: TOOL_IMAGES.triangleKnife,
     color: '#F2C94C',
     angle: 'V 60°',
     weight: '约 120g'
   },
   {
-    name: '平刀',
-    short: '平',
-    purpose: '铲底与去料',
-    desc: '刀口平直，专用于"铲底"——把不需要印色的木料铲掉，留下凸起的图案区域。是费工最多的一步。',
-    detail: '刀宽常见 6–12 毫米，铲底时左手扶版、右手运刀，配合木槌敲击使力。',
-    image: IMAGES.coloringCloseup,
-    color: '#2D8B46',
-    angle: '0° 平直',
+    name: '清底刀',
+    short: '清',
+    purpose: '清底与刮平',
+    desc: '清底刀也叫刮刀，用来把不需要着色的底面清掉，让图案线条和色块凸出来。它决定版面是否干净。',
+    detail: '清底看似粗活，其实最怕伤到已经刻好的细线。底面要低而平，印刷时纸面才不会被多余木屑蹭脏。',
+    image: TOOL_IMAGES.clearingKnife,
+    color: '#8A5A2B',
+    angle: '平口 0°',
     weight: '约 200g'
   },
   {
-    name: '圆刀',
-    short: '圆',
-    purpose: '圆点与凹面',
-    desc: '"U"字形刀口，用于雕刻圆点装饰和凹陷曲面。常见于花蕊、铜钱、铃铛等装饰部位。',
-    detail: '深圆刀挖花蕊，浅圆刀走衣裙的飘带凹槽——一刀深浅由腕力定。',
-    image: IMAGES.swordDanceFront,
+    name: '梨木板 / 椴木板',
+    short: '木',
+    purpose: '雕版材料',
+    desc: '梨木板质地细密、耐磨，适合承载复杂线稿；椴木板较轻软、纹理均匀，适合大面积色版和教学练习。',
+    detail: '真正能不能成版，还要看木材是否干透、纹理是否顺直。木板处理不好，后续套印会出现变形和跑版。',
+    image: TOOL_IMAGES.woodBoards,
     color: '#2D5DA1',
-    angle: 'U 90°',
-    weight: '约 150g'
+    angle: '板材',
+    weight: '视尺寸'
   },
   {
     name: '棕刷',
-    short: '棕',
+    short: '刷',
     purpose: '上色与扫纸',
-    desc: '不是刀，是套印阶段最重要的工具。棕榈纤维制成，上色均匀涂布到雕版上，刷纸时确保色块完全转印。',
-    detail: '一套印至少 5 把棕刷，每色一把不能混用，使用前要在水里浸软。',
-    image: IMAGES.drying,
+    desc: '棕刷不是刀，却是套印阶段最关键的工具。棕榈纤维能吸附颜料，把颜色均匀扫到雕版凸起处。',
+    detail: '每一种颜色最好单独用一把棕刷，避免红、黄、蓝相互污染。使用前浸软，刷色时要轻、匀、快。',
+    image: TOOL_IMAGES.palmBrush,
     color: '#8B5A2B',
-    angle: '宽 80mm',
+    angle: '刷宽 80mm',
     weight: '约 90g'
   }
 ];
@@ -328,10 +379,61 @@ function buildPrintBlocks() {
   });
 }
 
+function buildAdvancedBlock(step, index, printedSet, activeIndex, placedIndex) {
+  return {
+    name: step.name,
+    shortName: step.shortName,
+    color: step.color,
+    textColor: step.textColor,
+    order: step.order,
+    material: step.material,
+    purpose: step.purpose,
+    boardImage: step.boardImage,
+    layerImage: step.layerImage,
+    desc: step.desc,
+    printed: !!printedSet[index],
+    active: index === activeIndex,
+    placed: index === placedIndex
+  };
+}
+
+function buildAdvancedBlocks(printedSteps, activeIndex, placedIndex) {
+  var printedSet = {};
+  printedSteps.forEach(function(i) { printedSet[i] = true; });
+
+  return ADVANCED_PRINT_STEPS.map(function(step, index) {
+    return buildAdvancedBlock(step, index, printedSet, activeIndex, placedIndex);
+  });
+}
+
+function buildAdvancedPlacedBlock(index, printedSteps) {
+  if (index < 0 || index >= ADVANCED_PRINT_STEPS.length) return null;
+
+  var printedSet = {};
+  printedSteps.forEach(function(i) { printedSet[i] = true; });
+  return buildAdvancedBlock(ADVANCED_PRINT_STEPS[index], index, printedSet, index, index);
+}
+
+function buildAdvancedPreviewLayers(printedSteps) {
+  var printedSet = {};
+  printedSteps.forEach(function(i) { printedSet[i] = true; });
+
+  return ADVANCED_PRINT_STEPS.map(function(step, index) {
+    return {
+      id: 'advanced-' + index,
+      layerImage: step.layerImage,
+      color: step.color,
+      visible: !!printedSet[index],
+      zIndex: index + 1
+    };
+  });
+}
+
 Page({
   data: {
     IMAGES,
     VIDEOS,
+    storyVideoUrl: '',
     currentPage: 0,
     musicPlaying: false,
     musicTriggered: false,
@@ -355,6 +457,7 @@ Page({
 
     // 五色套印 — 纸拖印刷游戏
     printBlocks: buildPrintBlocks(),
+    printBlockCount: LOGO_PRINT_STEPS.length,
     currentBlockIndex: 0,
     activePrintBlock: {
       name: LOGO_PRINT_STEPS[0].name,
@@ -380,6 +483,24 @@ Page({
     isAnimating: false,
     animatingIndex: -1,
 
+    // 高级版台 — 实际分色木板展示
+    advancedBlocks: buildAdvancedBlocks([], 0, -1),
+    advancedBlockCount: ADVANCED_PRINT_STEPS.length,
+    advancedLastBlockIndex: ADVANCED_PRINT_STEPS.length - 1,
+    advancedBlockIndex: 0,
+    advancedActiveBlock: ADVANCED_PRINT_STEPS[0],
+    advancedPlacedBlockIndex: -1,
+    advancedPlacedBlock: null,
+    advancedBoardMoving: false,
+    advancedPaperArmed: false,
+    advancedPaperDragging: false,
+    advancedPaperSnap: false,
+    advancedPaperBackVisible: false,
+    advancedPaperDragX: 0,
+    advancedPaperRotate: 0,
+    advancedPrintedSteps: [],
+    advancedPreviewLayers: buildAdvancedPreviewLayers([]),
+
     // 图鉴卡片
     cards: [
       {
@@ -397,17 +518,17 @@ Page({
         flipped: false
       },
       {
-        title: '雕版印痕',
-        category: '工艺类',
-        image: IMAGES.boardDisplay,
-        desc: '一块梨木雕版可印制数千张年画，刀痕之间藏着匠人数十年的功力。',
+        title: '梨木与椴木板',
+        category: '材料类',
+        image: TOOL_IMAGES.woodBoards,
+        desc: '梨木细密耐磨，适合精细线版；椴木轻软均匀，适合练习和大色块。选板决定了刀路能走多稳。',
         flipped: false
       },
       {
-        title: '晾干成画',
-        category: '工序类',
-        image: IMAGES.drying,
-        desc: '套色完成后，年画需要自然晾干。色彩在空气中慢慢沉淀，最终呈现出浓郁的质感。',
+        title: '棕刷上色',
+        category: '工具类',
+        image: TOOL_IMAGES.palmBrush,
+        desc: '棕刷负责把颜料薄而均匀地铺到版面上。刷色不匀，套印就会出现漏色、糊线或串色。',
         flipped: false
       }
     ],
@@ -442,8 +563,9 @@ Page({
 
   onLoad() {
     this.bgMusic = wx.createInnerAudioContext();
-    this.bgMusic.src = VIDEOS.story;
+    this.preloadToolImages();
     resolveCloudURL(VIDEOS.story).then((url) => {
+      this.setData({ storyVideoUrl: url });
       if (this.bgMusic) {
         this.bgMusic.src = url;
       }
@@ -456,6 +578,10 @@ Page({
 
   onUnload() {
     this.clearColorSequenceTimer();
+    if (this._advancedBoardMoveTimer) {
+      clearTimeout(this._advancedBoardMoveTimer);
+      this._advancedBoardMoveTimer = null;
+    }
 
     if (this.bgMusic) {
       this.bgMusic.destroy();
@@ -518,11 +644,41 @@ Page({
 
   // ── 刀具图鉴 ──
 
+  preloadToolImages() {
+    this.data.tools.forEach((tool, index) => {
+      if (!tool || !tool.image) return;
+
+      const source = tool.image.indexOf('cloud://') === 0
+        ? resolveCloudURL(tool.image)
+        : Promise.resolve(tool.image);
+
+      source.then((url) => {
+        const data = {};
+        data['tools[' + index + '].displayImage'] = url;
+        if (this.data.selectedTool && this.data.selectedTool.name === tool.name) {
+          data.selectedTool = Object.assign({}, this.data.selectedTool, {
+            displayImage: url
+          });
+        }
+        this.setData(data);
+
+        wx.getImageInfo({
+          src: url,
+          fail: (err) => {
+            console.warn('[首页] 刀具图片预加载失败:', tool.name, err);
+          }
+        });
+      }).catch((err) => {
+        console.warn('[首页] 刀具图片临时链接获取失败:', tool.name, err);
+      });
+    });
+  },
+
   selectTool(e) {
     const index = parseInt(e.currentTarget.dataset.index, 10);
     this.setData({
       toolActiveIndex: index,
-      selectedTool: TOOLS[index],
+      selectedTool: this.data.tools[index] || TOOLS[index],
       toolDetailOpen: true
     });
     if (wx.vibrateShort) {
@@ -538,7 +694,7 @@ Page({
     const index = parseInt(e.currentTarget.dataset.index, 10);
     this.setData({
       toolActiveIndex: index,
-      selectedTool: TOOLS[index]
+      selectedTool: this.data.tools[index] || TOOLS[index]
     });
   },
 
@@ -668,7 +824,9 @@ Page({
 
     // 印刷音效模拟延迟
     setTimeout(function() {
-      var printedSteps = that.data.printedSteps.slice();
+      var printedSteps = that.data.printedSteps.length >= LOGO_PRINT_STEPS.length
+        ? []
+        : that.data.printedSteps.slice();
       if (printedSteps.indexOf(blockIndex) === -1) {
         printedSteps.push(blockIndex);
       }
@@ -760,37 +918,208 @@ Page({
     }, 260);
   },
 
-  // 重置所有印刷
-  resetLogoPrint() {
-    this.clearColorSequenceTimer();
+  // ── 高级版台 · 分色木板交互 ──
 
-    var step0 = LOGO_PRINT_STEPS[0];
+  updateAdvancedBlock(index) {
+    var printedSteps = this.data.advancedPrintedSteps;
+    var step = ADVANCED_PRINT_STEPS[index];
+    var placedIndex = this.data.advancedPlacedBlockIndex;
     this.setData({
-      printBlocks: buildPrintBlocks(),
-      currentBlockIndex: 0,
-      activePrintBlock: {
-        name: step0.name,
-        shortName: step0.shortName,
-        color: step0.color,
-        textColor: step0.textColor,
-        order: step0.order,
-        material: step0.material,
-        meaning: step0.meaning,
-        desc: step0.desc,
-        printed: false
+      advancedBlockIndex: index,
+      advancedActiveBlock: {
+        name: step.name,
+        shortName: step.shortName,
+        color: step.color,
+        textColor: step.textColor,
+        order: step.order,
+        material: step.material,
+        purpose: step.purpose,
+        boardImage: step.boardImage,
+        layerImage: step.layerImage,
+        desc: step.desc,
+        printed: printedSteps.indexOf(index) > -1,
+        placed: index === placedIndex
       },
-      printedSteps: [],
-      colors: buildColorStepsFromSteps([], -1),
-      logoPrintLayers: buildLogoPrintLayersFromSteps([]),
-      printedLayerCount: 0,
-      activeColor: -1,
-      activePrintStep: null,
-      paperDragOffset: 0,
-      paperRotation: -4,
-      isPaperDragging: false,
-      isPaperPressing: false,
-      isAnimating: false,
-      animatingIndex: -1
+      advancedBlocks: buildAdvancedBlocks(printedSteps, index, placedIndex)
+    });
+  },
+
+  selectAdvancedBlock(e) {
+    var index = parseInt(e.currentTarget.dataset.index, 10);
+    if (!Number.isFinite(index) || index < 0 || index >= ADVANCED_PRINT_STEPS.length) return;
+
+    var printedSteps = this.data.advancedPrintedSteps;
+    var placedBlock = buildAdvancedPlacedBlock(index, printedSteps);
+    var that = this;
+
+    if (this._advancedBoardMoveTimer) {
+      clearTimeout(this._advancedBoardMoveTimer);
+    }
+
+    this.setData({
+      advancedBlockIndex: index,
+      advancedActiveBlock: placedBlock,
+      advancedPlacedBlockIndex: index,
+      advancedPlacedBlock: placedBlock,
+      advancedBoardMoving: true,
+      advancedPaperArmed: false,
+      advancedPaperDragging: false,
+      advancedPaperSnap: false,
+      advancedPaperBackVisible: false,
+      advancedPaperDragX: 0,
+      advancedPaperRotate: 0,
+      advancedBlocks: buildAdvancedBlocks(printedSteps, index, index)
+    });
+
+    this._advancedBoardMoveTimer = setTimeout(function() {
+      that.setData({ advancedBoardMoving: false });
+    }, 360);
+  },
+
+  prevAdvancedBlock() {
+    var index = this.data.advancedBlockIndex;
+    if (index <= 0) return;
+    this.updateAdvancedBlock(index - 1);
+  },
+
+  nextAdvancedBlock() {
+    var index = this.data.advancedBlockIndex;
+    if (index >= ADVANCED_PRINT_STEPS.length - 1) return;
+    this.updateAdvancedBlock(index + 1);
+  },
+
+  printAdvancedBlock() {
+    var blockIndex = this.data.advancedPlacedBlockIndex;
+    if (blockIndex < 0) return;
+
+    var printedSteps = this.data.advancedPrintedSteps.slice();
+
+    if (printedSteps.length >= ADVANCED_PRINT_STEPS.length && printedSteps.indexOf(blockIndex) > -1) {
+      printedSteps = [];
+    }
+
+    if (printedSteps.indexOf(blockIndex) === -1) {
+      printedSteps.push(blockIndex);
+    }
+
+    if (wx.vibrateShort) {
+      wx.vibrateShort({ type: 'light' });
+    }
+
+    var step = ADVANCED_PRINT_STEPS[blockIndex];
+    var placedBlock = buildAdvancedPlacedBlock(blockIndex, printedSteps);
+    this.setData({
+      advancedPrintedSteps: printedSteps,
+      advancedPreviewLayers: buildAdvancedPreviewLayers(printedSteps),
+      advancedBlocks: buildAdvancedBlocks(printedSteps, blockIndex, blockIndex),
+      advancedBlockIndex: blockIndex,
+      advancedActiveBlock: {
+        name: step.name,
+        shortName: step.shortName,
+        color: step.color,
+        textColor: step.textColor,
+        order: step.order,
+        material: step.material,
+        purpose: step.purpose,
+        boardImage: step.boardImage,
+        layerImage: step.layerImage,
+        desc: step.desc,
+        printed: printedSteps.indexOf(blockIndex) > -1,
+        placed: true
+      },
+      advancedPlacedBlock: placedBlock
+    });
+  },
+
+  onAdvancedPaperTap() {
+    var now = Date.now();
+    if (this._advancedPaperLastTap && now - this._advancedPaperLastTap < 320) {
+      if (this.data.advancedPlacedBlockIndex < 0) return;
+      this.setData({
+        advancedPaperArmed: true,
+        advancedPaperSnap: false,
+        advancedPaperBackVisible: false,
+        advancedPaperDragX: 0,
+        advancedPaperRotate: 0
+      });
+    }
+    this._advancedPaperLastTap = now;
+  },
+
+  onAdvancedPaperTouchStart(e) {
+    if (!e.touches || !e.touches.length) return;
+
+    var now = Date.now();
+    var isDoubleTouch = this._advancedPaperLastTouchStart && now - this._advancedPaperLastTouchStart < 320;
+    this._advancedPaperLastTouchStart = now;
+
+    if (isDoubleTouch && this.data.advancedPlacedBlockIndex > -1) {
+      this.setData({
+        advancedPaperArmed: true,
+        advancedPaperSnap: false,
+        advancedPaperBackVisible: false,
+        advancedPaperDragX: 0,
+        advancedPaperRotate: 0
+      });
+    }
+
+    if (!this.data.advancedPaperArmed && !(isDoubleTouch && this.data.advancedPlacedBlockIndex > -1)) return;
+    this._advancedPaperStartX = e.touches[0].clientX;
+    this.setData({
+      advancedPaperDragging: true,
+      advancedPaperSnap: false
+    });
+  },
+
+  onAdvancedPaperTouchMove(e) {
+    if (!this.data.advancedPaperArmed || !this.data.advancedPaperDragging || !e.touches || !e.touches.length) return;
+
+    var deltaX = e.touches[0].clientX - this._advancedPaperStartX;
+    var dragX = Math.max(-76, Math.min(28, Math.round(deltaX * 0.72)));
+    var fold = Math.max(0, Math.min(180, Math.round(-dragX * 2.4)));
+
+    this.setData({
+      advancedPaperDragX: dragX,
+      advancedPaperRotate: -fold,
+      advancedPaperBackVisible: fold >= 96
+    });
+  },
+
+  onAdvancedPaperTouchEnd() {
+    if (!this.data.advancedPaperArmed) return;
+
+    var shouldPrint = this.data.advancedPlacedBlockIndex > -1 && this.data.advancedPaperDragX <= -64;
+    var that = this;
+
+    if (shouldPrint) {
+      this.setData({
+        advancedPaperDragging: false,
+        advancedPaperSnap: true,
+        advancedPaperBackVisible: true,
+        advancedPaperDragX: -44,
+        advancedPaperRotate: -180
+      });
+      this.printAdvancedBlock();
+
+      setTimeout(function() {
+        that.setData({
+          advancedPaperArmed: false,
+          advancedPaperSnap: false,
+          advancedPaperBackVisible: false,
+          advancedPaperDragX: 0,
+          advancedPaperRotate: 0
+        });
+      }, 220);
+      return;
+    }
+
+    this.setData({
+      advancedPaperArmed: false,
+      advancedPaperDragging: false,
+      advancedPaperSnap: false,
+      advancedPaperBackVisible: false,
+      advancedPaperDragX: 0,
+      advancedPaperRotate: 0
     });
   },
 

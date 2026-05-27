@@ -1,7 +1,7 @@
-const THREE = require('three-platformize')
-const WechatPlatformModule = require('three-platformize/src/WechatPlatform')
-const { GLTFLoader } = require('three-platformize/examples/jsm/loaders/GLTFLoader')
-const { resolveCloudURL } = require('../../utils/resolveCloudURL')
+const THREE = require('./vendor/three-platformize/build/three.module')
+const WechatPlatformModule = require('./vendor/three-platformize/src/WechatPlatform')
+const { GLTFLoader } = require('./vendor/three-platformize/examples/jsm/loaders/GLTFLoader')
+const { downloadFileToTemp } = require('./utils/downloadCloudFile')
 
 const WechatPlatform = WechatPlatformModule.default || WechatPlatformModule.WechatPlatform || WechatPlatformModule
 
@@ -104,39 +104,17 @@ Page({
       return;
     }
 
-    let downloadUrl = this._modelUrl;
-    if (this._modelUrl.startsWith('cloud://')) {
-      try {
-        downloadUrl = await resolveCloudURL(this._modelUrl);
-      } catch (err) {
-        console.error('[3D] 获取云存储临时链接失败:', err);
-        wx.showToast({ title: '模型链接获取失败', icon: 'none' });
-        this._createDemoCube();
-        return;
-      }
-    }
-
     wx.showLoading({ title: '下载模型中...' });
-    wx.downloadFile({
-      url: downloadUrl,
-      timeout: 60000,
-      success: (res) => {
-        wx.hideLoading();
-        if (res.statusCode === 200) {
-          this._loadGLBFromPath(res.tempFilePath);
-        } else {
-          console.error('[3D] 下载HTTP错误:', res.statusCode);
-          wx.showToast({ title: '模型下载失败', icon: 'none' });
-          this._createDemoCube();
-        }
-      },
-      fail: (err) => {
-        wx.hideLoading();
-        console.error('[3D] 下载失败:', err);
-        wx.showToast({ title: '模型下载失败，请重试', icon: 'none' });
-        this._createDemoCube();
-      }
-    });
+    try {
+      const tempPath = await downloadFileToTemp(this._modelUrl);
+      wx.hideLoading();
+      this._loadGLBFromPath(tempPath);
+    } catch (err) {
+      wx.hideLoading();
+      console.error('[3D] 下载失败:', err);
+      wx.showToast({ title: '模型下载失败，请重试', icon: 'none' });
+      this._createDemoCube();
+    }
   },
 
   _loadGLBFromPath(filePath) {

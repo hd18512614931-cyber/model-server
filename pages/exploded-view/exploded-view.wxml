@@ -1,37 +1,55 @@
 <view class="exploded-page">
-  <view class="back-btn" bindtap="goBack">
-    <text class="back-icon">←</text>
+  <!-- ═══════════════ 顶栏：导航 + 标题 ═══════════════ -->
+  <view class="top-bar">
+    <view class="top-back" bindtap="goBack">
+      <text class="top-back-icon">‹</text>
+    </view>
+
+    <view class="top-title-area">
+      <text class="top-title">五色套印</text>
+      <text class="top-subtitle">佛山木版年画 · 数字分色</text>
+    </view>
+
+    <view class="top-actions">
+      <view class="top-action-btn" bindtap="resetView">
+        <text class="top-action-icon">↺</text>
+      </view>
+    </view>
   </view>
 
-  <view class="float-title">
-    <text>佛山木版年画 · 五色套印</text>
-  </view>
-
+  <!-- ═══════════════ 加载态 ═══════════════ -->
   <view class="loading-panel" wx:if="{{loading}}">
     <view class="loading-ring"></view>
     <text class="loading-text">正在分析色层...（{{loadingProgress}}）</text>
   </view>
 
+  <!-- ═══════════════ 中心：3D 视角区 ═══════════════ -->
   <view
-    class="stage-wrapper {{slideDirection}}"
+    class="stage-zone {{slideDirection}}"
     wx:if="{{layers.length > 0}}"
-    bindtouchstart="onTouchStart"
-    bindtouchmove="onTouchMove"
-    bindtouchend="onTouchEnd"
   >
-    <view class="stage" bindtap="toggleExplode">
+    <view
+      class="stage"
+      bindtap="toggleExplode"
+      bindtouchstart="onTouchStart"
+      bindtouchmove="onTouchMove"
+      bindtouchend="onTouchEnd"
+    >
       <view
         class="layers-container"
         style="transform: rotateX({{rotateX}}deg) rotateZ({{rotateZ}}deg) scale({{scale}});"
       >
+        <!-- 纸张背景 -->
         <view
           class="paper-backdrop"
           style="transform: {{isExploded ? 'translateZ(-240px) translateY(96px)' : 'translateZ(0px) translateY(0px)'}};"
         ></view>
+
+        <!-- 图层 -->
         <image
           wx:for="{{layers}}"
           wx:key="index"
-          class="layer"
+          class="layer {{item.visible === false ? 'layer-hidden' : ''}} {{highlightedLayer === index ? 'layer-highlight' : ''}}"
           src="{{item.tempPath}}"
           mode="aspectFit"
           style="{{item.layerStyle}}"
@@ -40,6 +58,7 @@
     </view>
   </view>
 
+  <!-- ═══════════════ 左右切换箭头 ═══════════════ -->
   <view class="arrow-btn arrow-left" wx:if="{{!loading && currentIndex > 0}}" bindtap="prevItem">
     <text class="arrow-icon">‹</text>
   </view>
@@ -47,7 +66,46 @@
     <text class="arrow-icon">›</text>
   </view>
 
-  <view class="page-indicator" wx:if="{{!loading && colorLayersList.length > 0}}">
-    <text class="indicator-text">{{currentIndex + 1}} / {{colorLayersList.length}}</text>
+  <!-- ═══════════════ 底部：图层控制条 ═══════════════ -->
+  <view class="bottom-dock" wx:if="{{!loading && layers.length > 0}}">
+    <!-- 作品指示器 -->
+    <view class="dock-indicator" wx:if="{{colorLayersList.length > 1}}">
+      <text class="dock-indicator-text">{{currentIndex + 1}} / {{colorLayersList.length}}</text>
+    </view>
+
+    <!-- 图层可见性开关横条 -->
+    <view class="layer-toggle-strip">
+      <view class="strip-label">
+        <text class="strip-label-text">套色层</text>
+      </view>
+
+      <scroll-view class="strip-scroll" scroll-x enhanced show-scrollbar="{{false}}">
+        <view class="strip-chips">
+          <view
+            wx:for="{{layers}}"
+            wx:key="index"
+            class="layer-chip {{layerVisibility[index] === false ? 'chip-off' : 'chip-on'}} {{highlightedLayer === index ? 'chip-highlight' : ''}}"
+            data-index="{{index}}"
+            bindtap="toggleLayerVisibility"
+            bindlongpress="onLayerLongPress"
+            bindtouchend="onLayerTouchEnd"
+          >
+            <view class="chip-dot" style="background: {{item.color || '#888'}};"></view>
+            <text class="chip-label">{{item.label || ('图层' + (index + 1))}}</text>
+            <text class="chip-order">#{{index + 1}}</text>
+          </view>
+        </view>
+      </scroll-view>
+
+      <!-- 全部显示/隐藏 -->
+      <view class="strip-bulk">
+        <view class="bulk-btn" bindtap="showAllLayers">
+          <text class="bulk-icon">☉</text>
+        </view>
+        <view class="bulk-btn" bindtap="hideAllLayers">
+          <text class="bulk-icon">◎</text>
+        </view>
+      </view>
+    </view>
   </view>
 </view>

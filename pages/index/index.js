@@ -1,13 +1,15 @@
-const { LAYERS } = require('../../constants/cloudAssets');
-const { downloadCloudFile } = require('../../utils/downloadCloudFile');
+const { layerFileID } = require('../../constants/cloudAssets');
 
-const HOME_LAYER_CACHE_KEY = 'homeLayersLogoDemoCloudV3';
 const HOME_LAYER_URLS = [
-  LAYERS.logoDemoCleanBlack,
-  LAYERS.logoDemoCleanRed,
-  LAYERS.logoDemoCleanYellow,
-  LAYERS.logoDemoCleanDeepYellow,
-  LAYERS.logoDemoCleanBlue
+  layerFileID('logo-demo', 8),
+  layerFileID('logo-demo', 7),
+  layerFileID('logo-demo', 6),
+  layerFileID('logo-demo', 5),
+  layerFileID('logo-demo', 4),
+  layerFileID('logo-demo', 3),
+  layerFileID('logo-demo', 2),
+  layerFileID('logo-demo', 1),
+  layerFileID('logo-demo', 0)
 ];
 
 function buildHomeLayers(paths) {
@@ -28,7 +30,7 @@ Page({
   data: {
     isExploded: true,
     hasTapped: false,
-    layersLoading: true,
+    layersLoading: false,
     layers: buildHomeLayers(HOME_LAYER_URLS),
     rotateX: 15,
     rotateY: -25,
@@ -42,8 +44,7 @@ Page({
     _isTouchMoved: false
   },
 
-  async onLoad() {
-    await this._prepareHomeLayers();
+  onLoad() {
     this._autoCollapseLayers();
   },
 
@@ -51,76 +52,6 @@ Page({
     setTimeout(() => {
       this.setData({ isExploded: false });
     }, 1500);
-  },
-
-  async _prepareHomeLayers() {
-    const cachedLayers = wx.getStorageSync(HOME_LAYER_CACHE_KEY);
-    if (Array.isArray(cachedLayers) && cachedLayers.length === HOME_LAYER_URLS.length && this._areHomeLayersValid(cachedLayers)) {
-      this.setData({
-        layers: buildHomeLayers(cachedLayers.map((layer) => layer.localPath)),
-        layersLoading: false,
-        isExploded: true
-      });
-      return;
-    }
-
-    this.setData({ layersLoading: true });
-    const downloadedLayers = [];
-
-    for (let i = 0; i < HOME_LAYER_URLS.length; i++) {
-      try {
-        const localPath = await this._downloadHomeLayer(HOME_LAYER_URLS[i], i);
-        downloadedLayers.push({ fileID: HOME_LAYER_URLS[i], localPath });
-      } catch (err) {
-        console.error('下载图层失败:', HOME_LAYER_URLS[i], err);
-      }
-    }
-
-    if (downloadedLayers.length === HOME_LAYER_URLS.length) {
-      wx.setStorageSync(HOME_LAYER_CACHE_KEY, downloadedLayers);
-      this.setData({
-        layers: buildHomeLayers(downloadedLayers.map((layer) => layer.localPath)),
-        layersLoading: false,
-        isExploded: true
-      });
-      return;
-    }
-
-    wx.removeStorageSync(HOME_LAYER_CACHE_KEY);
-    this.setData({
-      layers: buildHomeLayers(HOME_LAYER_URLS),
-      layersLoading: false,
-      isExploded: true
-    });
-    wx.showToast({
-      title: '图层缓存失败，使用在线图层',
-      icon: 'none'
-    });
-  },
-
-  _areHomeLayersValid(layers) {
-    const fs = wx.getFileSystemManager();
-    try {
-      layers.forEach((layer) => {
-        fs.accessSync(layer.localPath);
-      });
-      return true;
-    } catch (err) {
-      return false;
-    }
-  },
-
-  async _downloadHomeLayer(fileID, index) {
-    const tempPath = await downloadCloudFile(fileID);
-    const fs = wx.getFileSystemManager();
-    const ext = fileID.indexOf('.jpg') > -1 || fileID.indexOf('.jpeg') > -1 ? 'jpg' : 'png';
-    const savePath = `${wx.env.USER_DATA_PATH}/home_logo_demo_layer_${index}.${ext}`;
-    try {
-      fs.unlinkSync(savePath);
-    } catch (err) {}
-
-    fs.saveFileSync(tempPath, savePath);
-    return savePath;
   },
 
   toggleExplode() {
@@ -206,9 +137,9 @@ Page({
     });
   },
 
-  goToKnowledge() {
-    wx.navigateTo({
-      url: '/pages/knowledge/knowledge'
+  goToHome() {
+    wx.redirectTo({
+      url: '/pages/home/home'
     });
   }
 })

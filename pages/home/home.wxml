@@ -1,7 +1,8 @@
 <view class="page-root">
   <video
+    wx:if="{{storyVideoUrl}}"
     class="global-bg-video"
-    src="{{VIDEOS.story}}"
+    src="{{storyVideoUrl}}"
     autoplay
     loop
     muted
@@ -108,7 +109,7 @@
           <view class="tl-node {{currentEra===3?'tl-active':''}}" bindtap="onEraTap" data-index="3">
             <view class="tl-dot dot-future"></view>
             <view class="tl-content">
-              <text class="tl-year">2025</text>
+              <text class="tl-year">2026</text>
               <text class="tl-era-name">未来 · 数字新生</text>
               <text class="tl-one-line">AI与年画的第一次对话</text>
             </view>
@@ -151,7 +152,7 @@
         <view class="tool-detail-card" style="border-color:{{tools[toolActiveIndex].color}}44;">
           <view class="tool-detail-head">
             <view class="tool-detail-icon" style="background:{{tools[toolActiveIndex].color}};">
-              <text>{{tools[toolActiveIndex].short}}</text>
+              <text class="tool-detail-icon-text">{{tools[toolActiveIndex].short}}</text>
             </view>
             <view class="tool-detail-title-wrap">
               <text class="tool-detail-name">{{tools[toolActiveIndex].name}}</text>
@@ -163,6 +164,15 @@
             </view>
           </view>
 
+          <image
+            class="tool-detail-image"
+            src="{{tools[toolActiveIndex].displayImage || tools[toolActiveIndex].image}}"
+            mode="aspectFit"
+            lazy-load
+            bindtap="selectTool"
+            data-index="{{toolActiveIndex}}"
+          ></image>
+
           <text class="tool-detail-desc">{{tools[toolActiveIndex].desc}}</text>
 
           <view class="tool-detail-tip">
@@ -171,7 +181,7 @@
           </view>
 
           <view class="tool-detail-more" bindtap="selectTool" data-index="{{toolActiveIndex}}">
-            <text>展 开 大 图</text>
+            <text class="tool-detail-more-label">展 开 大 图</text>
             <text class="more-arrow">↗</text>
           </view>
         </view>
@@ -227,109 +237,113 @@
       </view>
     </swiper-item>
 
-    <!-- ═══════════ 屏4 · 色 ═══════════ -->
+    <!-- ═══════════ 屏6 · 版 · 高级版台 ═══════════ -->
     <swiper-item>
-      <view class="screen screen-color-game">
-        <view class="color-game-header">
-          <text class="screen-label">套 印</text>
-          <text class="screen-heading">五色套印</text>
-          <view class="color-reset-btn {{printedSteps.length===0?'reset-hidden':''}}" catchtap="resetLogoPrint">
-            <text>重来</text>
+      <view class="screen screen-advanced-print">
+        <view class="advanced-header">
+          <view>
+            <text class="screen-label">版 台</text>
+            <text class="screen-heading">分色木板</text>
           </view>
         </view>
 
-        <!-- 木板切换指示器 -->
-        <view class="block-indicator">
-          <view class="block-arrow {{currentBlockIndex===0?'arrow-dim':''}}" catchtap="prevPrintBlock">
-            <text>‹</text>
-          </view>
-          <view class="block-current" catchtap="cyclePrintBlock">
-            <view class="block-dot-main" style="background:{{activePrintBlock.color}};"></view>
-            <view class="block-info">
-              <text class="block-title">{{activePrintBlock.name}}</text>
-              <text class="block-hint" wx:if="{{activePrintBlock.printed}}">已印 · 点此换木板</text>
-              <text class="block-hint" wx:else>拖动纸张落版</text>
+        <view class="advanced-stage">
+          <view class="advanced-board-card" style="border-color:{{advancedPlacedBlock ? advancedPlacedBlock.color : advancedActiveBlock.color}}66;">
+            <view class="advanced-card-head">
+              <view class="advanced-title-wrap">
+                <text class="advanced-board-title" style="color:{{advancedPlacedBlock ? advancedPlacedBlock.color : advancedActiveBlock.color}};">
+                  {{advancedPlacedBlock ? advancedPlacedBlock.name : '准备放置木板'}}
+                </text>
+                <text class="advanced-board-sub">
+                  {{advancedPlacedBlock ? advancedPlacedBlock.purpose + ' · ' + advancedPlacedBlock.material : '从下方选择一块有色木板'}}
+                </text>
+              </view>
+            </view>
+            <view class="advanced-board-slot {{advancedPlacedBlock ? 'advanced-slot-filled' : ''}}">
+              <image
+                wx:if="{{advancedPlacedBlock}}"
+                class="advanced-board-img {{advancedBoardMoving ? 'advanced-board-moving' : ''}}"
+                src="{{advancedPlacedBlock.boardImage}}"
+                mode="aspectFit"
+              ></image>
+              <view wx:else class="advanced-slot-empty">
+                <view class="advanced-slot-empty-mark">
+                  <text class="advanced-slot-empty-mark-text">版</text>
+                </view>
+                <text class="advanced-slot-empty-text">空版台</text>
+              </view>
             </view>
           </view>
-          <view class="block-arrow {{currentBlockIndex===4?'arrow-dim':''}}" catchtap="nextPrintBlock">
-            <text>›</text>
+
+          <view class="advanced-proof-card">
+            <view class="advanced-proof-head">
+              <text class="advanced-proof-title">翻印纸张</text>
+              <text class="advanced-proof-count">{{advancedPrintedSteps.length}} / {{advancedBlockCount}}</text>
+            </view>
+            <view
+              class="advanced-proof-paper {{advancedPaperArmed ? 'advanced-paper-armed' : ''}} {{advancedPaperDragging ? 'advanced-paper-dragging' : ''}} {{advancedPaperSnap ? 'advanced-paper-snap' : ''}} {{advancedPaperBackVisible ? 'advanced-paper-back-visible' : ''}}"
+              style="transform: translateX({{advancedPaperDragX}}rpx) rotateY({{advancedPaperRotate}}deg);"
+              bindtap="onAdvancedPaperTap"
+              catchtouchstart="onAdvancedPaperTouchStart"
+              catchtouchmove="onAdvancedPaperTouchMove"
+              catchtouchend="onAdvancedPaperTouchEnd"
+              catchtouchcancel="onAdvancedPaperTouchEnd"
+            >
+              <image
+                wx:for="{{advancedPreviewLayers}}"
+                wx:key="id"
+                src="{{item.layerImage}}"
+                mode="aspectFit"
+                class="advanced-proof-layer {{item.visible ? 'advanced-layer-visible' : ''}}"
+                style="z-index:{{item.zIndex}};"
+              ></image>
+              <view class="advanced-paper-back">
+                <view class="advanced-paper-back-fiber"></view>
+              </view>
+              <view wx:if="{{advancedPrintedSteps.length===0}}" class="advanced-proof-empty">
+                <text class="advanced-proof-empty-text">
+                  {{advancedPlacedBlock ? (advancedPaperArmed ? '向左翻到版台' : '双击纸张') : '先放置木板'}}
+                </text>
+              </view>
+            </view>
           </view>
         </view>
 
-        <!-- 纸拖印刷区域 -->
-        <view class="paper-drag-area">
+        <view class="advanced-board-tray">
           <view
-            class="woodbed"
-            style="border-top-color:{{activePrintBlock.color}}; box-shadow: 0 16rpx 40rpx rgba(0, 0, 0, 0.45), inset 0 4rpx 0 {{activePrintBlock.color}};"
-          >
-            <view class="woodbed-grain"></view>
-            <view class="woodbed-label">
-              <text>版 台 · 第{{activePrintBlock.order}}版</text>
-            </view>
-          </view>
-
-          <view
-            class="paper-sheet {{isPaperDragging ? 'paper-dragging' : ''}} {{isPaperPressing ? 'paper-pressing' : ''}}"
-            style="transform: translateY({{paperDragOffset}}rpx) rotate({{paperRotation}}deg);"
-            catchtouchstart="onPaperTouchStart"
-            catchtouchmove="onPaperTouchMove"
-            catchtouchend="onPaperTouchEnd"
-          >
-            <image
-              wx:for="{{logoPrintLayers}}"
-              wx:key="id"
-              src="{{item.fileID}}"
-              mode="aspectFit"
-              class="paper-layer {{item.visible ? 'layer-visible' : ''}} {{item.fresh ? 'layer-fresh' : ''}}"
-              style="z-index: {{item.zIndex}};"
-            ></image>
-
-            <view wx:if="{{printedSteps.length === 0}}" class="paper-empty-hint">
-              <text class="hint-arrow">↡</text>
-              <text class="hint-text">向下拖动纸张</text>
-              <text class="hint-sub">开始套色印刷</text>
-            </view>
-
-            <view class="paper-texture"></view>
-          </view>
-        </view>
-
-        <!-- 色版选择器 -->
-        <view class="block-selector">
-          <view
-            wx:for="{{printBlocks}}"
-            wx:key="index"
-            class="block-chip {{currentBlockIndex===index ? 'chip-active' : ''}} {{item.printed ? 'chip-printed' : ''}}"
+            wx:for="{{advancedBlocks}}"
+            wx:key="name"
+            class="advanced-board-thumb {{item.placed?'advanced-thumb-empty':''}} {{item.printed?'advanced-thumb-printed':''}}"
+            style="--advanced-color:{{item.color}};"
             data-index="{{index}}"
-            catchtap="selectPrintBlock"
+            bindtap="selectAdvancedBlock"
           >
-            <view class="chip-dot" style="background:{{item.color}};">
-              <text wx:if="{{item.printed}}" class="chip-check">✓</text>
-              <text wx:else style="color:{{item.textColor}};">{{item.order}}</text>
+            <view class="advanced-thumb-frame">
+              <image
+                wx:if="{{!item.placed}}"
+                class="advanced-thumb-img"
+                src="{{item.boardImage}}"
+                mode="aspectFit"
+              ></image>
+              <view wx:else class="advanced-thumb-placeholder">
+                <text class="advanced-thumb-placeholder-text">已放置</text>
+              </view>
+              <view wx:if="{{item.printed}}" class="advanced-thumb-check">
+                <text class="advanced-thumb-check-text">✓</text>
+              </view>
             </view>
-            <text class="chip-name">{{item.shortName}}</text>
+            <text class="advanced-thumb-name">{{item.shortName}}</text>
           </view>
         </view>
 
-        <!-- 颜色信息面板 -->
-        <view class="color-info {{activePrintStep ? 'color-info-live' : ''}}">
-          <text class="color-info-kicker">
-            {{activePrintStep ? '第' + activePrintStep.order + '版 · ' + activePrintStep.meaning : '套印体验'}}
-          </text>
-          <text class="color-info-name" style="color:{{activePrintStep ? activePrintStep.color : '#F2C94C'}};">
-            {{activePrintStep ? activePrintStep.name : '选择版台，拖动纸张落版'}}
-          </text>
-          <text class="color-info-line">
-            {{activePrintStep ? '颜料：' + activePrintStep.material : '向下拖动纸张至版台，模拟套印技法。每版可反复印刷。'}}
-          </text>
-          <text class="color-info-desc">
-            {{activePrintStep ? activePrintStep.desc : '印完一版按顺序切换木板；也可手动点下方色版选择木板重新印刷。'}}
-          </text>
+        <view class="advanced-info">
+          <text class="advanced-info-title">{{advancedActiveBlock.name}}</text>
+          <text class="advanced-info-desc">{{advancedActiveBlock.desc}}</text>
         </view>
       </view>
     </swiper-item>
 
-    <!-- ═══════════ 屏5 · 典 ═══════════ -->
+    <!-- ═══════════ 屏7 · 典 ═══════════ -->
     <swiper-item>
       <view class="screen screen-cards">
         <text class="screen-label">图 鉴</text>
@@ -379,12 +393,12 @@
               data-index="{{index}}"
               bindtap="selectQuizOption"
             >
-              <text>{{option}}</text>
+              <text class="quiz-opt-text">{{option}}</text>
             </view>
           </view>
 
           <view wx:if="{{showExplanation}}" class="quiz-explain">
-            <text>{{quiz[currentQuestion].explanation}}</text>
+            <text class="quiz-explain-text">{{quiz[currentQuestion].explanation}}</text>
           </view>
         </block>
 
@@ -396,7 +410,7 @@
             <text wx:elif="{{quizScore === 1}}" class="quiz-msg">继续探索，精彩无限。</text>
             <text wx:else class="quiz-msg">没关系，往回滑看看知识点。</text>
             <view class="quiz-reset" bindtap="resetQuiz">
-              <text>重新答题</text>
+              <text class="quiz-reset-text">重新答题</text>
             </view>
           </view>
         </block>
@@ -462,7 +476,7 @@
 
         <view class="team-footer">
           <text class="team-footer-text">佛山木版年画 · 数字体验</text>
-          <text class="team-footer-year">2025</text>
+          <text class="team-footer-year">2026</text>
         </view>
       </view>
     </swiper-item>
@@ -470,13 +484,13 @@
 
   <!-- ═══════════ 刀具大图弹窗 ═══════════ -->
   <view class="tool-modal" wx:if="{{toolDetailOpen}}" bindtap="closeToolDetail">
-    <view class="tool-modal-content" catchtap="noop">
+    <view class="tool-modal-content">
       <view class="tool-modal-close" bindtap="closeToolDetail">✕</view>
       <image
         wx:if="{{selectedTool.image}}"
         class="tool-modal-img"
-        src="{{selectedTool.image}}"
-        mode="aspectFill"
+        src="{{selectedTool.displayImage || selectedTool.image}}"
+        mode="aspectFit"
       ></image>
       <view class="tool-modal-banner" style="background:{{selectedTool.color}};">
         <text class="tool-modal-banner-text">{{selectedTool.name}} · {{selectedTool.purpose}}</text>
@@ -535,8 +549,8 @@
           class="era-modal-video"
         ></video>
       </view>
-      <view wx:if="{{eraDetail.isLast}}" class="era-modal-btn" bindtap="goToAiGenerate">
-        <text>体验 AI 生图 →</text>
+      <view wx:if="{{eraDetail.isLast}}" class="era-modal-btn" bindtap="goToAiHome">
+        <text>体验AI二创 →</text>
       </view>
     </view>
   </view>

@@ -1,10 +1,12 @@
 const USER_CACHE_KEY = 'userColorLayers';
 const PRESET_CACHE_KEY = 'presetColorLayersCloudV1';
 const { layerFileID } = require('../../constants/cloudAssets');
-const { getApiBaseURL } = require('../../utils/apiBaseURL');
-const { resolveCloudURL } = require('../../utils/resolveCloudURL');
+const { downloadCloudFile } = require('./utils/downloadCloudFile');
+const { requestSplitColors } = require('./utils/splitColors');
+const { saveLayerImage } = require('./utils/saveLayerImage');
 
 const MAX_USER_RECORDS = 10;
+
 const PRESET_GALLERIES = [
   {
     id: 'nianhua-demo',
@@ -21,6 +23,7 @@ const PRESET_GALLERIES = [
     layerCount: 5
   }
 ];
+
 const PRESET_LAYER_META = [
   { color: '#1a1a1a', label: '墨线稿' },
   { color: '#cc2936', label: '大红' },
@@ -28,33 +31,46 @@ const PRESET_LAYER_META = [
   { color: '#e6a817', label: '橙黄' },
   { color: '#e8b4a2', label: '肉粉' }
 ];
+
+const DEFAULT_ROTATE_X = 55;
+const DEFAULT_ROTATE_Z = -30;
+const DEFAULT_SCALE = 1;
+
 Page({
   data: {
     loading: false,
     loadingText: '正在分析色层...',
     loadingProgress: '',
+
+    // 视图状态
     isExploded: false,
-    scale: 1,
-    rotateX: 55,
-    rotateZ: -30,
+    scale: DEFAULT_SCALE,
+    rotateX: DEFAULT_ROTATE_X,
+    rotateZ: DEFAULT_ROTATE_Z,
+
+    // 图层可见性：索引 -> true/false
+    layerVisibility: {},
+    // 所有图层数组
+    layers: [],
+
+    // 作品列表
     colorLayersList: [],
     currentIndex: 0,
     slideDirection: '',
-    layers: []
+
+    // 底栏控制面板
+    panelExpanded: false,
+    // 高亮选中的图层（手指悬停预览）
+    highlightedLayer: -1
   },
 
   async onLoad(options = {}) {
     this._resetTouchState();
-    try {
-      const oldCache = wx.getStorageSync(PRESET_CACHE_KEY);
-      if (oldCache && typeof oldCache !== 'object') {
-        wx.removeStorageSync(PRESET_CACHE_KEY);
-      }
-    } catch (err) {
-      wx.removeStorageSync(PRESET_CACHE_KEY);
-    }
+    this._clearOldCache();
 
     this._isSwitching = false;
+    this._doubleTapTimer = null;
+
     this.setData({
       loading: true,
       loadingProgress: '准备预置图层'
@@ -79,21 +95,20 @@ Page({
       });
     } catch (err) {
       console.error('[分色展厅] 加载失败:', err);
-      this.setData({
-        loading: false,
-        loadingProgress: ''
-      });
-      wx.showToast({
-        title: '图层加载失败，请重试',
-        icon: 'none'
-      });
+      this.setData({ loading: false, loadingProgress: '' });
+      wx.showToast({ title: '图层加载失败，请重试', icon: 'none' });
     }
   },
+
+  // ── 导航 ──
 
   goBack() {
     wx.navigateBack();
   },
 
+  // ── 顶部操作 ──
+
+  /** 点击舞台炸开/复原（有拖拽则不触发） */
   toggleExplode() {
     if (this._touchMoved) return;
 
@@ -101,7 +116,21 @@ Page({
     this.setData({ isExploded }, () => {
       this.updateLayerStyles();
     });
+
+    wx.vibrateShort({ type: 'light' });
   },
+
+  /** 重置视角 */
+  resetView() {
+    this.setData({
+      rotateX: DEFAULT_ROTATE_X,
+      rotateZ: DEFAULT_ROTATE_Z,
+      scale: DEFAULT_SCALE
+    });
+    wx.vibrateShort({ type: 'light' });
+  },
+
+  // ── 作品切换 ──
 
   prevItem() {
     if (this.data.currentIndex <= 0) return;
@@ -116,26 +145,97 @@ Page({
   applyCurrentLayers() {
     const current = this.data.colorLayersList[this.data.currentIndex];
     if (!current || !Array.isArray(current.layers)) return;
+    if (current.layers.length === 0) return;
 
-    const layers = current.layers;
-    if (layers.length === 0) return;
+    // 初始化所有图层可见
+    const visibility = {};
+    current.layers.forEach((_, index) => {
+      visibility[index] = true;
+    });
 
-    this.setData({ layers }, () => {
+    this.setData({
+      layers: current.layers,
+      layerVisibility: visibility
+    }, () => {
       this.updateLayerStyles();
     });
   },
 
   updateLayerStyles() {
+    const { layers, isExploded, layerVisibility } = this.data;
     this.setData({
-      layers: this.data.layers.map((layer, index) => ({
+      layers: layers.map((layer, index) => ({
         ...layer,
-        layerStyle: this._getLayerStyle(index, this.data.isExploded)
+        visible: layerVisibility[index] !== false,
+        layerStyle: this._getLayerStyle(index, isExploded)
       }))
     });
   },
 
+  // ── 图层可见性控制 ──
+
+  /** 切换单个图层可见性 */
+  toggleLayerVisibility(e) {
+    const index = e.currentTarget.dataset.index;
+    const currentVisibility = { ...this.data.layerVisibility };
+    const newState = currentVisibility[index] === false ? true : false;
+    currentVisibility[index] = newState;
+
+    this.setData({ layerVisibility: currentVisibility }, () => {
+      this.updateLayerStyles();
+    });
+
+    const layer = this.data.layers[index];
+    const label = (layer && layer.label) ? layer.label : ('图层' + (index + 1));
+    wx.vibrateShort({ type: 'light' });
+    wx.showToast({
+      title: newState ? (label + ' 已显示') : (label + ' 已隐藏'),
+      icon: 'none',
+      duration: 800
+    });
+  },
+
+  /** 全部显示 */
+  showAllLayers() {
+    const visibility = {};
+    this.data.layers.forEach((_, index) => {
+      visibility[index] = true;
+    });
+    this.setData({ layerVisibility: visibility }, () => {
+      this.updateLayerStyles();
+    });
+    wx.vibrateShort({ type: 'light' });
+  },
+
+  /** 全部隐藏（只留下第一层） */
+  hideAllLayers() {
+    const visibility = {};
+    this.data.layers.forEach((_, index) => {
+      visibility[index] = index === 0;
+    });
+    this.setData({ layerVisibility: visibility }, () => {
+      this.updateLayerStyles();
+    });
+    wx.vibrateShort({ type: 'light' });
+  },
+
+  /** 长按图层高亮预览 */
+  onLayerLongPress(e) {
+    const index = e.currentTarget.dataset.index;
+    this.setData({ highlightedLayer: index });
+    wx.vibrateShort({ type: 'medium' });
+  },
+
+  /** 松开取消高亮 */
+  onLayerTouchEnd() {
+    this.setData({ highlightedLayer: -1 });
+  },
+
+  // ── 手势交互 ──
+
   onTouchStart(e) {
     const touches = e.touches || [];
+
     if (touches.length === 2) {
       this._touchMoved = true;
       this._initialPinchDistance = this._getTouchDistance(touches[0], touches[1]);
@@ -154,6 +254,7 @@ Page({
 
   onTouchMove(e) {
     const touches = e.touches || [];
+
     if (touches.length === 2) {
       const currentDistance = this._getTouchDistance(touches[0], touches[1]);
       if (this._initialPinchDistance <= 0) {
@@ -162,7 +263,10 @@ Page({
         return;
       }
 
-      const scale = this._clamp(this._initialScale * (currentDistance / this._initialPinchDistance), 0.5, 3);
+      const scale = this._clamp(
+        this._initialScale * (currentDistance / this._initialPinchDistance),
+        0.5, 3
+      );
       this._touchMoved = true;
       this.setData({ scale });
       return;
@@ -173,6 +277,7 @@ Page({
       const currentY = touches[0].clientY;
       const totalDx = currentX - this._touchStartX;
       const totalDy = currentY - this._touchStartY;
+
       if (Math.sqrt(totalDx * totalDx + totalDy * totalDy) >= 10) {
         this._touchMoved = true;
       }
@@ -181,6 +286,7 @@ Page({
       const dy = currentY - this._lastTouchY;
       const rotateX = this._clamp(this.data.rotateX + dy * 0.3, 0, 90);
       const rotateZ = this.data.rotateZ + dx * 0.3;
+
       this._lastTouchX = currentX;
       this._lastTouchY = currentY;
       this.setData({ rotateX, rotateZ });
@@ -192,9 +298,16 @@ Page({
     this._initialScale = this.data.scale;
   },
 
+  // ── 图库管理 ──
+
   async addImageToGallery(localImagePath, id, title) {
     const currentList = wx.getStorageSync(USER_CACHE_KEY) || [];
-    if (Array.isArray(currentList) && currentList.find((item) => item.id === id && this._areLayerFilesValid(item.layers))) {
+    if (
+      Array.isArray(currentList) &&
+      currentList.find(
+        (item) => item.id === id && this._areLayerFilesValid(item.layers)
+      )
+    ) {
       return false;
     }
 
@@ -207,12 +320,19 @@ Page({
     const layers = [];
     for (let i = 0; i < response.layers.length; i++) {
       const layer = response.layers[i];
-      const filePath = `${wx.env.USER_DATA_PATH}/user_layer_${id}_${i}.png`;
-      const data = layer.data || layer.base64 || '';
-      const base64Data = data.replace(/^data:image\/\w+;base64,/, '');
-      if (!base64Data) continue;
+      if (layer.fileID) {
+        layers.push({
+          tempPath: layer.fileID,
+          fileID: layer.fileID,
+          color: layer.color || '',
+          label: layer.label || ('图层' + (i + 1))
+        });
+        continue;
+      }
 
-      fs.writeFileSync(filePath, wx.base64ToArrayBuffer(base64Data), 'binary');
+      const filePath = `${wx.env.USER_DATA_PATH}/user_layer_${id}_${i}.png`;
+      const saved = await saveLayerImage(layer, filePath, fs);
+      if (!saved) continue;
       layers.push({
         tempPath: filePath,
         color: layer.color || '',
@@ -221,8 +341,11 @@ Page({
     }
     if (layers.length === 0) return false;
 
-    const nextList = (Array.isArray(wx.getStorageSync(USER_CACHE_KEY)) ? wx.getStorageSync(USER_CACHE_KEY) : [])
-      .filter((item) => item.id !== id);
+    const nextList = (
+      Array.isArray(wx.getStorageSync(USER_CACHE_KEY))
+        ? wx.getStorageSync(USER_CACHE_KEY)
+        : []
+    ).filter((item) => item.id !== id);
     nextList.unshift({
       id,
       title,
@@ -234,6 +357,19 @@ Page({
     return true;
   },
 
+  // ── 内部方法 ──
+
+  _clearOldCache() {
+    try {
+      const oldCache = wx.getStorageSync(PRESET_CACHE_KEY);
+      if (oldCache && typeof oldCache !== 'object') {
+        wx.removeStorageSync(PRESET_CACHE_KEY);
+      }
+    } catch (err) {
+      wx.removeStorageSync(PRESET_CACHE_KEY);
+    }
+  },
+
   async _getPresetGalleries() {
     const cache = wx.getStorageSync(PRESET_CACHE_KEY) || {};
     const nextCache = { ...cache };
@@ -242,12 +378,10 @@ Page({
     for (const gallery of PRESET_GALLERIES) {
       try {
         let layers = this._getCachedPresetLayers(gallery, cache[gallery.id]);
-
         if (layers.length !== gallery.layerCount) {
           this.setData({ loadingProgress: '下载' + gallery.title });
           layers = await this._downloadPresetLayers(gallery);
         }
-
         if (layers.length === gallery.layerCount) {
           nextCache[gallery.id] = {
             id: gallery.id,
@@ -273,21 +407,21 @@ Page({
     } catch (err) {
       console.error('[分色展厅] 缓存保存失败:', err);
     }
-
     return galleries;
   },
 
   _getCachedPresetLayers(gallery, cachedGallery) {
     if (!cachedGallery || !Array.isArray(cachedGallery.layers)) {
       const expectedLayers = this._buildPresetLayersFromLocalPaths(gallery);
-      if (this._areLayerFilesValid(expectedLayers)) {
-        return expectedLayers;
-      }
+      if (this._areLayerFilesValid(expectedLayers)) return expectedLayers;
       return [];
     }
 
     const storedLayers = cachedGallery.layers;
-    if (storedLayers.length === gallery.layerCount && this._areLayerFilesValid(storedLayers)) {
+    if (
+      storedLayers.length === gallery.layerCount &&
+      this._areLayerFilesValid(storedLayers)
+    ) {
       return storedLayers.map((layer, index) => ({
         tempPath: layer.tempPath,
         color: layer.color || (PRESET_LAYER_META[index] ? PRESET_LAYER_META[index].color : ''),
@@ -296,10 +430,7 @@ Page({
     }
 
     const expectedLayers = this._buildPresetLayersFromLocalPaths(gallery);
-    if (this._areLayerFilesValid(expectedLayers)) {
-      return expectedLayers;
-    }
-
+    if (this._areLayerFilesValid(expectedLayers)) return expectedLayers;
     return [];
   },
 
@@ -313,7 +444,6 @@ Page({
 
   async _downloadPresetLayers(gallery) {
     const layers = [];
-
     for (let i = 0; i < gallery.layerCount; i++) {
       try {
         const tempPath = await this._downloadPresetLayer(gallery, i);
@@ -326,39 +456,17 @@ Page({
         console.error('[分色展厅] 预置图层下载失败:', gallery.id, i, err);
       }
     }
-
     return layers.length === gallery.layerCount ? layers : [];
   },
 
   async _downloadPresetLayer(gallery, index) {
     const fileID = layerFileID(gallery.cloudPrefix, index);
-    const url = await resolveCloudURL(fileID);
-    return new Promise((resolve, reject) => {
-      wx.downloadFile({
-        url,
-        timeout: 60000,
-        success: (res) => {
-          if (res.statusCode !== 200) {
-            reject(new Error('HTTP ' + res.statusCode));
-            return;
-          }
-
-          const fs = wx.getFileSystemManager();
-          const savePath = `${wx.env.USER_DATA_PATH}/layer_${gallery.id}_${index}.png`;
-          try {
-            fs.unlinkSync(savePath);
-          } catch (err) {}
-
-          try {
-            fs.saveFileSync(res.tempFilePath, savePath);
-            resolve(savePath);
-          } catch (err) {
-            reject(err);
-          }
-        },
-        fail: reject
-      });
-    });
+    const tempPath = await downloadCloudFile(fileID);
+    const fs = wx.getFileSystemManager();
+    const savePath = `${wx.env.USER_DATA_PATH}/layer_${gallery.id}_${index}.png`;
+    try { fs.unlinkSync(savePath); } catch (err) { /* 忽略 */ }
+    fs.saveFileSync(tempPath, savePath);
+    return savePath;
   },
 
   _getValidUserGalleries() {
@@ -367,62 +475,66 @@ Page({
       const cache = wx.getStorageSync(USER_CACHE_KEY);
       storedList = Array.isArray(cache) ? cache : [];
     } catch (err) {
-      console.error('[分色展厅] 用户作品缓存读取失败:', err);
       return [];
     }
     if (storedList.length === 0) return [];
 
-    const validList = storedList.filter((record) => {
-      return record && Array.isArray(record.layers) && record.layers.length > 0 && this._areLayerFilesValid(record.layers);
-    }).sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0)).slice(0, MAX_USER_RECORDS).map((record) => ({
-      id: record.id,
-      title: record.title,
-      isPreset: false,
-      layers: record.layers.map((layer) => ({
-        tempPath: layer.tempPath,
-        color: layer.color,
-        label: layer.label
-      })),
-      timestamp: record.timestamp
-    }));
+    const validList = storedList
+      .filter((record) => {
+        return (
+          record &&
+          Array.isArray(record.layers) &&
+          record.layers.length > 0 &&
+          this._areLayerFilesValid(record.layers)
+        );
+      })
+      .sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0))
+      .slice(0, MAX_USER_RECORDS)
+      .map((record) => ({
+        id: record.id,
+        title: record.title,
+        isPreset: false,
+        layers: record.layers.map((layer) => ({
+          tempPath: layer.fileID || layer.tempPath,
+          fileID: layer.fileID || (this._isCloudFilePath(layer.tempPath) ? layer.tempPath : ''),
+          color: layer.color,
+          label: layer.label
+        })),
+        timestamp: record.timestamp
+      }));
 
     if (validList.length > 0) {
       try {
         wx.setStorageSync(USER_CACHE_KEY, validList);
-      } catch (err) {
-        console.error('[分色展厅] 用户作品缓存保存失败:', err);
-      }
+      } catch (err) { /* 忽略 */ }
     } else {
       wx.removeStorageSync(USER_CACHE_KEY);
     }
-
     return validList;
-  },
-
-  _getExistingUserLayers(layers) {
-    const fs = wx.getFileSystemManager();
-    return layers.filter((layer) => {
-      try {
-        fs.accessSync(layer.tempPath);
-        return true;
-      } catch (err) {
-        return false;
-      }
-    });
   },
 
   _areLayerFilesValid(layers) {
     if (!Array.isArray(layers) || layers.length === 0) return false;
-
     const fs = wx.getFileSystemManager();
     try {
       layers.forEach((layer) => {
-        fs.accessSync(layer.tempPath);
+        const src = layer.fileID || layer.tempPath;
+        if (!src) {
+          throw new Error('empty layer source');
+        }
+        if (this._isCloudFilePath(src)) {
+          return;
+        }
+        fs.accessSync(src);
       });
       return true;
     } catch (err) {
       return false;
     }
+  },
+
+  _isCloudFilePath(src) {
+    return typeof src === 'string' && src.indexOf('cloud://') === 0;
   },
 
   _switchItem(newIndex, direction) {
@@ -436,9 +548,9 @@ Page({
     setTimeout(() => {
       this.setData({
         currentIndex: newIndex,
-        rotateX: 55,
-        rotateZ: -30,
-        scale: 1,
+        rotateX: DEFAULT_ROTATE_X,
+        rotateZ: DEFAULT_ROTATE_Z,
+        scale: DEFAULT_SCALE,
         isExploded: false,
         slideDirection: inClass
       }, () => {
@@ -452,30 +564,7 @@ Page({
   },
 
   _requestSplitColors(imageBase64) {
-    return new Promise((resolve, reject) => {
-      wx.request({
-        url: `${getApiBaseURL()}/api/split-colors`,
-        method: 'POST',
-        header: {
-          'Content-Type': 'application/json'
-        },
-        data: {
-          imageBase64,
-          imageUrl: imageBase64
-        },
-        timeout: 60000,
-        success: (res) => {
-          if (res.statusCode >= 200 && res.statusCode < 300 && res.data && res.data.success) {
-            resolve(res.data);
-            return;
-          }
-          reject(new Error((res.data && res.data.error) || '分色接口请求失败'));
-        },
-        fail: (err) => {
-          reject(new Error(err.errMsg || '分色接口请求失败'));
-        }
-      });
-    });
+    return requestSplitColors(imageBase64);
   },
 
   _getLayerStyle(index, isExploded) {

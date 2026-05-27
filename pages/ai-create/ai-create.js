@@ -165,6 +165,16 @@ Page({
 
     for (let i = 0; i < layers.length; i++) {
       const layer = layers[i];
+      if (layer.fileID) {
+        savedLayers.push({
+          tempPath: layer.fileID,
+          fileID: layer.fileID,
+          color: layer.color || '',
+          label: layer.label || ('图层' + (i + 1))
+        });
+        continue;
+      }
+
       const tempPath = `${wx.env.USER_DATA_PATH}/user_layer_${id}_${i}.png`;
       const saved = await saveLayerImage(layer, tempPath, fs);
       if (!saved) continue;

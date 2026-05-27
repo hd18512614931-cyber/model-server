@@ -33,7 +33,7 @@
     <view class="menu-row">
       <view class="menu-btn" bindtap="goToExplodedView"><text>2D 分色展厅</text></view>
       <view class="menu-btn" bindtap="goTo3D"><text>3D 展厅</text></view>
-      <view class="menu-btn" bindtap="goToKnowledge"><text class="menu-icon">📚</text><text>知识谱系</text></view>
+      <view class="menu-btn" bindtap="goToHome"><text>知识图谱</text></view>
       <view class="menu-btn" bindtap="showToast" data-msg="文创商城开发中"><text>文创商城</text></view>
     </view>
   </view>
