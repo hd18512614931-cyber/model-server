@@ -4,6 +4,10 @@
 
 > 当前小程序仍在迭代中。正式上线后，这里会补充微信小程序码、体验链接或演示二维码。
 
+
+https://github.com/user-attachments/assets/fe38bd64-449a-4ddb-baea-47126fa811b0
+
+
 ## 项目定位
 
 项目的核心目标不是只做一个展示页，而是把传统木版年画的“分版、上色、套印”过程做成可交互、可解释、可演示的数字体验。它既可以作为非遗传播作品，也可以作为我在实习面试中展示工程能力、AI 应用落地能力和 CI/CD 实践经验的项目。
@@ -46,6 +50,7 @@
 5. 小程序端读取这些图层，在 2D 展示页和套印交互中逐层叠加。
 
 这个设计让 AI 生成结果不只是“看起来像年画”，而是进一步对应到传统木版年画的制作逻辑：一张完整图像可以被解释为多个独立色版的叠印结果。
+<img width="533" height="1151" alt="image" src="https://github.com/user-attachments/assets/24d478a2-3ff3-46df-9261-44231fbb6287" />
 
 ### 3. 五色套印交互体验
 <img width="1080" height="2374" alt="Screenshot_2026-05-27-21-12-51-89_e39d2c7de19156b0683cd93e8735f348" src="https://github.com/user-attachments/assets/6ea58d40-c0ba-408f-862d-3c2bf3ce6ad6" />
