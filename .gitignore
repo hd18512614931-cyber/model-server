@@ -1,2 +1,18 @@
 node_modules/
 project.private.config.json
+
+# Local AI / editor state
+.claude/
+.codex/
+.cursor/
+.vscode/
+
+# Local secrets and environment files
+.env
+.env.*
+!.env.example
+
+# Logs and OS metadata
+*.log
+.DS_Store
+Thumbs.db
